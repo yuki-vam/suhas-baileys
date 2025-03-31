@@ -1,6 +1,6 @@
 {
   "name": "@shizodevs/shizoweb",
-  "version": "6.8.1",
+  "version": "6.8.2",
   "description": "WhatsApp API",
   "keywords": [
     "whatsapp",
@@ -40,7 +40,6 @@
     "lint:fix": "eslint src --fix --ext .js,.ts,.jsx,.tsx",
     "prepack": "tsc",
     "prepare": "tsc",
-    "preinstall": "node ./engine-requirements.js",
     "release": "release-it",
     "test": "jest"
   },
