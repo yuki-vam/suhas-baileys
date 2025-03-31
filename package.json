@@ -1,6 +1,6 @@
 {
   "name": "@shizodevs/shizoweb",
-  "version": "6.8.6",
+  "version": "6.8.7",
   "description": "WhatsApp API",
   "keywords": [
     "whatsapp",
@@ -51,7 +51,7 @@
     "axios": "^1.6.0",
     "cache-manager": "^5.7.6",
     "libphonenumber-js": "^1.10.20",
-    "libsignal": "https://github.com/shizo-devs/libsignal.git",
+    "libsignal": "https://github.com/shizo-devs/libsignal-node.git",
     "lodash": "^4.17.21",
     "music-metadata": "^7.12.3",
     "@cacheable/node-cache": "^1.4.0",
