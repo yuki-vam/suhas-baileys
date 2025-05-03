@@ -52,6 +52,7 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 		logger,
 		retryRequestDelayMs,
 		maxMsgRetryCount,
+		ignoreMsgLoading,
 		getMessage,
 		shouldIgnoreJid
 	} = config
@@ -867,6 +868,11 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 	}
 
 	const handleMessage = async(node: BinaryNode) => {
+		if(ignoreMsgLoading && node.attrs.offline) {
+			logger.debug({ key: node.attrs.key }, 'ignored offline message')
+			await sendMessageAck(node)
+			return
+		}
 		if(shouldIgnoreJid(node.attrs.from) && node.attrs.from !== '@s.whatsapp.net') {
 			logger.debug({ key: node.attrs.key }, 'ignored message')
 			await sendMessageAck(node)
