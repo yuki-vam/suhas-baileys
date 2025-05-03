@@ -5,10 +5,7 @@ on:
     tags:
       - "v*"
 
-# Use standard permissions instead of "write-all"
-permissions:
-  contents: write
-  packages: write
+permissions: write-all
 
 jobs:
   publish-release:
@@ -23,7 +20,7 @@ jobs:
         run: git fetch --tags -f || true
 
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v3.6.0
         with:
           node-version: 20.x
           registry-url: "https://registry.npmjs.org"
@@ -35,7 +32,7 @@ jobs:
         run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
 
       - uses: actions/cache@v3
-        id: yarn-cache
+        id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
@@ -47,13 +44,18 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish to NPM as baileys-elite
-        run: |
-          # Update package name before publishing
-          npx json -I -f package.json -e "this.name='baileys-elite'"
-          npm publish --access public
+      - name: Publish in NPM (as `baileys`)
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      
+      - name: Publish in NPM (shizodevs scope)
+        run: |
+          npx json -I -f package.json -e "this.name='baileys-elite'"
+          npm publish --access public --//registry.npmjs.org/:_authToken=$NPM_TOKEN
+          npx json -I -f package.json -e "this.name='baileys-elite'"
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Generate Changelog
         id: generate_changelog
@@ -67,16 +69,21 @@ jobs:
         run: npm pack
 
       - name: Rename Pack
-        run: mv *.tgz baileys-elite.tgz
+        run: mv *.tgz shizoweb.tgz
 
       - name: Create Release
         uses: meeDamian/github-release@2.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref }}
           commitish: ${{ github.sha }}
           name: ${{ github.ref_name }}
           body: ${{ steps.generate_changelog.outputs.changelog }}
+          draft: false
+          prerelease: false
           files: >
             baileys-elite.tgz
+          gzip: folders
+          allow_override: true
