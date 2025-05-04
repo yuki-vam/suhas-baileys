@@ -3,7 +3,6 @@ import { inflate } from 'zlib'
 import * as constants from './constants'
 import { jidEncode } from './jid-utils'
 import type { BinaryNode, BinaryNodeCodingOptions } from './types'
-import logger from '../Utils/logger'
 
 const inflatePromise = promisify(inflate)
 
@@ -153,16 +152,10 @@ export const decodeDecompressedBinaryNode = (
 		const device = readByte()
 		const user = readString(readByte())
 
-		if((domainType & 1) !== 0 || (domainType & 0x80) === 0) {
-		  if(![0, 1].includes(domainType)) {
-				logger.warn('Possibly invalid domainType:', domainType, user, device)
-		  }
-		}
-
 		return jidEncode(
-		  user,
-		  domainType === 0 || domainType === 128 ? 's.whatsapp.net' : 'lid',
-		  device
+			user,
+			domainType === 0 || domainType === 128 ? 's.whatsapp.net' : 'lid',
+			device
 		)
 	}
 
