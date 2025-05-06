@@ -63,4 +63,4 @@ class LT_HASH_ANTI_TAMPERING {
   }
 }
 
-export const LT_HASH_ANTI_TAMPERING = new LT_HASH_ANTI_TAMPERING("WhatsApp Patch Integrity");
+export const LT_HASH_ANTI_TAMPERING = new LT_HASH_ANTI_TAMPERING("WhatsApp Patch Integrity")
