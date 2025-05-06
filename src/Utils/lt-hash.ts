@@ -1,61 +1,81 @@
-import { hkdf } from './crypto'
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.LT_HASH_ANTI_TAMPERING = void 0;
+const crypto_1 = require("./crypto");
 
-/**
- * LT Hash is a summation based hash algorithm that maintains the integrity of a piece of data
- * over a series of mutations. You can add/remove mutations and it'll return a hash equal to
- * if the same series of mutations was made sequentially.
- */
-
-const o = 128
+const o: number = 128;
 
 class d {
+    private salt: string;
 
-	salt: string
+    constructor(e: string) {
+        this.salt = e;
+    }
 
-	constructor(e: string) {
-		this.salt = e
-	}
-	add(e, t) {
-		var r = this
-		for(const item of t) {
-			e = r._addSingle(e, item)
-		}
+    async add(e: Promise<ArrayBuffer> | ArrayBuffer, t: Uint8Array[]): Promise<ArrayBuffer> {
+        for (const item of t) {
+            e = await this._addSingle(e, item);
+        }
+        return e;
+    }
 
-		return e
-	}
-	subtract(e, t) {
-		var r = this
-		for(const item of t) {
-			e = r._subtractSingle(e, item)
-		}
+    async subtract(e: Promise<ArrayBuffer> | ArrayBuffer, t: Uint8Array[]): Promise<ArrayBuffer> {
+        for (const item of t) {
+            e = await this._subtractSingle(e, item);
+        }
+        return e;
+    }
 
-		return e
-	}
-	subtractThenAdd(e, t, r) {
-		var n = this
-		return n.add(n.subtract(e, r), t)
-	}
-	async _addSingle(e, t) {
-		var r = this
-		const n = new Uint8Array(await hkdf(Buffer.from(t), o, { info: r.salt })).buffer
-		return r.performPointwiseWithOverflow(await e, n, ((e, t) => e + t))
-	}
-	async _subtractSingle(e, t) {
-		var r = this
+    async subtractThenAdd(
+        e: Promise<ArrayBuffer> | ArrayBuffer, 
+        t: Uint8Array[], 
+        r: Uint8Array[]
+    ): Promise<ArrayBuffer> {
+        return await this.add(await this.subtract(e, r), t);
+    }
 
-		const n = new Uint8Array(await hkdf(Buffer.from(t), o, { info: r.salt })).buffer
-		return r.performPointwiseWithOverflow(e, n, ((e, t) => e - t))
-	}
-	performPointwiseWithOverflow(e, t, r) {
-		const n = new DataView(e)
-		  , i = new DataView(t)
-		  , a = new ArrayBuffer(n.byteLength)
-		  , s = new DataView(a)
-		for(let e = 0; e < n.byteLength; e += 2) {
-			s.setUint16(e, r(n.getUint16(e, !0), i.getUint16(e, !0)), !0)
-		}
+    async _addSingle(e: Promise<ArrayBuffer> | ArrayBuffer, t: Uint8Array): Promise<ArrayBuffer> {
+        const hkdfResult = await (0, crypto_1.hkdf)(Buffer.from(t), o, { info: this.salt });
+        const n = new Uint8Array(hkdfResult).buffer;
+        const resolved = await e;
+        return this.performPointwiseWithOverflow(resolved, n, (a: number, b: number) => a + b);
+    }
 
-		return a
-	}
+    async _subtractSingle(e: Promise<ArrayBuffer> | ArrayBuffer, t: Uint8Array): Promise<ArrayBuffer> {
+        const hkdfResult = await (0, crypto_1.hkdf)(Buffer.from(t), o, { info: this.salt });
+        const n = new Uint8Array(hkdfResult).buffer;
+        const resolved = await e;
+        return this.performPointwiseWithOverflow(resolved, n, (a: number, b: number) => a - b);
+    }
+
+    performPointwiseWithOverflow(
+        e: ArrayBuffer, 
+        t: ArrayBuffer, 
+        r: (a: number, b: number) => number
+    ): ArrayBuffer {
+        let n: DataView, i: DataView;
+        try {
+            const eBuf = e instanceof ArrayBuffer ? e : e.buffer;
+            const tBuf = t instanceof ArrayBuffer ? t : t.buffer;
+
+            n = new DataView(eBuf);
+            i = new DataView(tBuf);
+        } catch (err) {
+            console.error("DataView creation failed:", err);
+            console.error("e:", e);
+            console.error("t:", t);
+            throw err;
+        }
+
+        const a = new ArrayBuffer(n.byteLength);
+        const s = new DataView(a);
+
+        for (let offset = 0; offset < n.byteLength; offset += 2) {
+            s.setUint16(offset, r(n.getUint16(offset, true), i.getUint16(offset, true)), true);
+        }
+
+        return a;
+    }
 }
-export const LT_HASH_ANTI_TAMPERING = new d('WhatsApp Patch Integrity')
+
+exports.LT_HASH_ANTI_TAMPERING = new d("WhatsApp Patch Integrity");
