@@ -69,7 +69,7 @@ jobs:
         run: npm pack
 
       - name: Rename Pack
-        run: mv *.tgz shizoweb.tgz
+        run: mv *.tgz baileys-elite.tgz
 
       - name: Create Release
         uses: meeDamian/github-release@2.0
