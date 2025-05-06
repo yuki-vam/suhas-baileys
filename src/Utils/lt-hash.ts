@@ -1,81 +1,66 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.LT_HASH_ANTI_TAMPERING = void 0;
-const crypto_1 = require("./crypto");
+import { hkdf } from './crypto';
 
-const o: number = 128;
+const OUTPUT_SIZE = 128;
 
-class d {
-    private salt: string;
+class LT_HASH_ANTI_TAMPERING {
+  private salt: string;
 
-    constructor(e: string) {
-        this.salt = e;
+  constructor(salt: string) {
+    this.salt = salt;
+  }
+
+  async add(hash: Promise<ArrayBuffer>, items: string[]): Promise<ArrayBuffer> {
+    for (const item of items) {
+      hash = await this._addSingle(hash, item);
     }
+    return hash;
+  }
 
-    async add(e: Promise<ArrayBuffer> | ArrayBuffer, t: Uint8Array[]): Promise<ArrayBuffer> {
-        for (const item of t) {
-            e = await this._addSingle(e, item);
-        }
-        return e;
+  async subtract(hash: Promise<ArrayBuffer>, items: string[]): Promise<ArrayBuffer> {
+    for (const item of items) {
+      hash = await this._subtractSingle(hash, item);
     }
+    return hash;
+  }
 
-    async subtract(e: Promise<ArrayBuffer> | ArrayBuffer, t: Uint8Array[]): Promise<ArrayBuffer> {
-        for (const item of t) {
-            e = await this._subtractSingle(e, item);
-        }
-        return e;
+  async subtractThenAdd(hash: Promise<ArrayBuffer>, itemsToAdd: string[], itemsToSubtract: string[]): Promise<ArrayBuffer> {
+    return await this.add(await this.subtract(hash, itemsToSubtract), itemsToAdd);
+  }
+
+  private async _addSingle(hash: Promise<ArrayBuffer>, item: string): Promise<ArrayBuffer> {
+    const hkdfResult = await hkdf(Buffer.from(item), OUTPUT_SIZE, { info: this.salt });
+    const n = new Uint8Array(hkdfResult).buffer;
+    const resolved = await hash;
+    return this.performPointwiseWithOverflow(resolved, n, (a, b) => a + b);
+  }
+
+  private async _subtractSingle(hash: Promise<ArrayBuffer>, item: string): Promise<ArrayBuffer> {
+    const hkdfResult = await hkdf(Buffer.from(item), OUTPUT_SIZE, { info: this.salt });
+    const n = new Uint8Array(hkdfResult).buffer;
+    const resolved = await hash;
+    return this.performPointwiseWithOverflow(resolved, n, (a, b) => a - b);
+  }
+
+  private performPointwiseWithOverflow(e: ArrayBuffer, t: ArrayBuffer, operation: (a: number, b: number) => number): ArrayBuffer {
+    let n: DataView, i: DataView;
+    try {
+      const eBuf = e instanceof ArrayBuffer ? e : (e as any).buffer;
+      const tBuf = t instanceof ArrayBuffer ? t : (t as any).buffer;
+      n = new DataView(eBuf);
+      i = new DataView(tBuf);
+    } catch (err) {
+      console.error("DataView creation failed:", err);
+      console.error("e:", e);
+      console.error("t:", t);
+      throw err;
     }
-
-    async subtractThenAdd(
-        e: Promise<ArrayBuffer> | ArrayBuffer, 
-        t: Uint8Array[], 
-        r: Uint8Array[]
-    ): Promise<ArrayBuffer> {
-        return await this.add(await this.subtract(e, r), t);
+    const resultBuffer = new ArrayBuffer(n.byteLength);
+    const s = new DataView(resultBuffer);
+    for (let offset = 0; offset < n.byteLength; offset += 2) {
+      s.setUint16(offset, operation(n.getUint16(offset, true), i.getUint16(offset, true)), true);
     }
-
-    async _addSingle(e: Promise<ArrayBuffer> | ArrayBuffer, t: Uint8Array): Promise<ArrayBuffer> {
-        const hkdfResult = await (0, crypto_1.hkdf)(Buffer.from(t), o, { info: this.salt });
-        const n = new Uint8Array(hkdfResult).buffer;
-        const resolved = await e;
-        return this.performPointwiseWithOverflow(resolved, n, (a: number, b: number) => a + b);
-    }
-
-    async _subtractSingle(e: Promise<ArrayBuffer> | ArrayBuffer, t: Uint8Array): Promise<ArrayBuffer> {
-        const hkdfResult = await (0, crypto_1.hkdf)(Buffer.from(t), o, { info: this.salt });
-        const n = new Uint8Array(hkdfResult).buffer;
-        const resolved = await e;
-        return this.performPointwiseWithOverflow(resolved, n, (a: number, b: number) => a - b);
-    }
-
-    performPointwiseWithOverflow(
-        e: ArrayBuffer, 
-        t: ArrayBuffer, 
-        r: (a: number, b: number) => number
-    ): ArrayBuffer {
-        let n: DataView, i: DataView;
-        try {
-            const eBuf = e instanceof ArrayBuffer ? e : e.buffer;
-            const tBuf = t instanceof ArrayBuffer ? t : t.buffer;
-
-            n = new DataView(eBuf);
-            i = new DataView(tBuf);
-        } catch (err) {
-            console.error("DataView creation failed:", err);
-            console.error("e:", e);
-            console.error("t:", t);
-            throw err;
-        }
-
-        const a = new ArrayBuffer(n.byteLength);
-        const s = new DataView(a);
-
-        for (let offset = 0; offset < n.byteLength; offset += 2) {
-            s.setUint16(offset, r(n.getUint16(offset, true), i.getUint16(offset, true)), true);
-        }
-
-        return a;
-    }
+    return resultBuffer;
+  }
 }
 
-exports.LT_HASH_ANTI_TAMPERING = new d("WhatsApp Patch Integrity");
+export const LT_HASH_ANTI_TAMPERING = new LT_HASH_ANTI_TAMPERING("WhatsApp Patch Integrity");
