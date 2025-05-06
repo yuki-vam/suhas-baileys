@@ -11,23 +11,23 @@ The original repository was initially removed by its creator and subsequently ta
 Install in package.json:
 ```json
 "dependencies": {
-    "@shizodevs/baileys": "*"
+    "baileys-elite": "*"
 }
 ```
 or install in terminal:
 ```
-npm install @shizodevs/baileys
+npm install baileys-elite
 ```
 
 Then import the default function in your code:
 ```ts 
 // type esm
-import makeWASocket from '@shizodevs/baileys'
+import makeWASocket from 'baileys-elite'
 ```
 
 ```js
 // type cjs
-const { default: makeWASocket } = require("@shizodevs/baileys")
+const { default: makeWASocket } = require("baileys-elite")
 ```
 
 ## Added Features and Improvements
