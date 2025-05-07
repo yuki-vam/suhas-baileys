@@ -441,5 +441,5 @@ if(usePairingCode && !sock.authState.creds.registered) {
     </div>
   </div>
   
-  <p style="font-style: italic; max-width: 600px; margin: 0 auto;">Powered by Baileys-Elite - The Ultimate WhatsApp Web API Experience</p>
+  <p style="font-style: italic; max-width: 600px; margin: 0 auto;">Powered by Baileys-Elite - The Ultimate WhatsApp Web API Experience</p> 
 </div>
