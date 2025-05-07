@@ -32,12 +32,20 @@ jobs:
           else
             echo "version_increased=false" >> $GITHUB_OUTPUT
           fi
+          
+          # Check if version is beta
+          if [[ "$CURRENT_VERSION" == *-beta* ]]; then
+            echo "is_beta=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_beta=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Log version changes
         run: |
           echo "Previous version: ${{ steps.get_previous_version.outputs.prev_version }}"
           echo "Current version: ${{ steps.get_previous_version.outputs.current_version }}"
           echo "Version increased: ${{ steps.get_previous_version.outputs.version_increased }}"
+          echo "Is beta version: ${{ steps.get_previous_version.outputs.is_beta }}"
 
       - name: Setup Node
         if: steps.get_previous_version.outputs.version_increased == 'true'
@@ -75,17 +83,32 @@ jobs:
           git tag -a $VERSION -m "Release $VERSION"
           git push origin $VERSION
 
-      - name: Publish in NPM (as `baileys-elite`)
-        if: steps.get_previous_version.outputs.version_increased == 'true'
+      - name: Publish in NPM (as `baileys-elite`) - Regular Version
+        if: steps.get_previous_version.outputs.version_increased == 'true' && steps.get_previous_version.outputs.is_beta == 'false'
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       
-      - name: Publish in NPM (Baileys-elite)
-        if: steps.get_previous_version.outputs.version_increased == 'true'
+      - name: Publish in NPM (as `baileys-elite`) - Beta Version
+        if: steps.get_previous_version.outputs.version_increased == 'true' && steps.get_previous_version.outputs.is_beta == 'true'
+        run: npm publish --access public --tag beta
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      
+      - name: Publish in NPM (Baileys-elite) - Regular Version
+        if: steps.get_previous_version.outputs.version_increased == 'true' && steps.get_previous_version.outputs.is_beta == 'false'
         run: |
           npx json -I -f package.json -e "this.name='baileys-elite'"
           npm publish --access public --//registry.npmjs.org/:_authToken=$NPM_TOKEN
+          npx json -I -f package.json -e "this.name='baileys-elite'"
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish in NPM (Baileys-elite) - Beta Version
+        if: steps.get_previous_version.outputs.version_increased == 'true' && steps.get_previous_version.outputs.is_beta == 'true'
+        run: |
+          npx json -I -f package.json -e "this.name='baileys-elite'"
+          npm publish --access public --tag beta --//registry.npmjs.org/:_authToken=$NPM_TOKEN
           npx json -I -f package.json -e "this.name='baileys-elite'"
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -107,8 +130,8 @@ jobs:
         if: steps.get_previous_version.outputs.version_increased == 'true'
         run: mv *.tgz baileys-elite.tgz
 
-      - name: Create GitHub Release
-        if: steps.get_previous_version.outputs.version_increased == 'true'
+      - name: Create GitHub Release (Regular)
+        if: steps.get_previous_version.outputs.version_increased == 'true' && steps.get_previous_version.outputs.is_beta == 'false'
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -117,5 +140,21 @@ jobs:
           body: ${{ steps.generate_changelog.outputs.changelog }}
           draft: false
           prerelease: false
+          files: |
+            baileys-elite.tgz
+
+      - name: Create GitHub Release (Beta)
+        if: steps.get_previous_version.outputs.version_increased == 'true' && steps.get_previous_version.outputs.is_beta == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: v${{ steps.get_previous_version.outputs.current_version }}
+          name: v${{ steps.get_previous_version.outputs.current_version }} (Beta)
+          body: |
+            ## Beta Release
+            
+            ${{ steps.generate_changelog.outputs.changelog }}
+          draft: false
+          prerelease: true
           files: |
             baileys-elite.tgz
