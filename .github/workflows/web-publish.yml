@@ -57,7 +57,7 @@ jobs:
           const htmlContent = marked.parse(readmeContent);
           
           // Create HTML template
-          const htmlTemplate = \`
+          const htmlTemplate = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
