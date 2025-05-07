@@ -284,7 +284,9 @@ jobs:
           content=$(marked public/readme.md)
           
           # Replace placeholder in template with content
-          sed "s|<!-- README CONTENT WILL BE INSERTED HERE -->|$content|g" template.html > public/index.html
+          # Save content to a file to avoid issues with special characters
+          echo "$content" > content.html
+          sed -e '/<!-- README CONTENT WILL BE INSERTED HERE -->/r content.html' -e '/<!-- README CONTENT WILL BE INSERTED HERE -->/d' template.html > public/index.html
           
           # Minify the HTML
           html-minifier --collapse-whitespace --remove-comments --remove-optional-tags --remove-redundant-attributes --remove-script-type-attributes --remove-tag-whitespace --use-short-doctype --minify-css true --minify-js true public/index.html -o public/index.html
