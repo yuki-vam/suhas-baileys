@@ -1,118 +1,162 @@
-# <div align='center'>Baileys - Typescript/Javascript WhatsApp Web API</div>
+# 🚀 Baileys-Elite ⚡
 
-<div align="center"><img src="https://raw.githubusercontent.com/shizothetechie/database/refs/heads/main/image/shizo.png"></div>
+<div align="center">
+  
+  ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+  ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+  ![WhatsApp](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)
+  ![NPM](https://img.shields.io/badge/npm-CB3837?style=for-the-badge&logo=npm&logoColor=white)
+  
+  <img src="https://raw.githubusercontent.com/shizothetechie/database/refs/heads/main/image/shizo.png" width="400px">
+  
+  *The enhanced TypeScript/JavaScript WhatsApp Web API*
+</div>
 
-## Important Note
+---
 
-The original repository was initially removed by its creator and subsequently taken over by [WhiskeySockets](https://github.com/WhiskeySockets). Building upon this foundation, I have implemented several enhancements and introduced new features that were not present in the original repository. These improvements aim to elevate functionality and empower the open source codes and versatile experience.
+## 📌 Important Note
 
-## Install
+> ⚠️ The original repository was initially removed by its creator and subsequently taken over by [WhiskeySockets](https://github.com/WhiskeySockets). Building upon this foundation, I have implemented several enhancements and introduced new features that were not present in the original repository. These improvements aim to elevate functionality and empower the open source codes and versatile experience.
 
-Install in package.json:
+---
+
+## 📦 Installation
+
+### 📄 In package.json:
 ```json
 "dependencies": {
     "baileys-elite": "*"
 }
 ```
-or install in terminal:
-```
+
+### 💻 Or via terminal:
+```bash
 npm install baileys-elite
 ```
 
-Then import the default function in your code:
-```ts 
-// type esm
+### 🔗 Import in your code:
+```typescript
+// ESM
 import makeWASocket from 'baileys-elite'
 ```
 
-```js
-// type cjs
+```javascript
+// CommonJS
 const { default: makeWASocket } = require("baileys-elite")
 ```
 
-## Added Features and Improvements
-Here are some of the features and improvements I have added:
+---
 
-- **Support for Sending Messages to Channels**: You can now easily send messages to channels.
+## ✨ Enhanced Features
 
-- **Support for Button Messages and Interactive Messages**: Added the ability to send messages with buttons and interactive messages.
+<table>
+  <tr>
+    <td>🔊 <b>Channel Messaging</b></td>
+    <td>Send messages to WhatsApp channels</td>
+  </tr>
+  <tr>
+    <td>🎛️ <b>Interactive Messages</b></td>
+    <td>Create button-based and interactive messages</td>
+  </tr>
+  <tr>
+    <td>🤖 <b>AI Message Icon</b></td>
+    <td>Customizable AI icon for messages</td>
+  </tr>
+  <tr>
+    <td>🖼️ <b>Enhanced Profile Pictures</b></td>
+    <td>Upload profile pictures without cropping</td>
+  </tr>
+  <tr>
+    <td>🔐 <b>Custom Pairing Code</b></td>
+    <td>Create personalized pairing codes for device connection</td>
+  </tr>
+  <tr>
+    <td>🔧 <b>Libsignal Improvements</b></td>
+    <td>Cleaner logs and optimized output</td>
+  </tr>
+</table>
 
-- **AI Message Icon**: Added customizable AI icon settings for messages
+---
 
-- **Profile Picture Settings**: Allows users to upload profile pictures in their original size without cropping, ensuring better quality and visual presentation.
+## 💡 Feature Examples
 
-- **Custom Pairing Code**: Users can now create and customize pairing codes as they wish, enhancing convenience and security when connecting devices.
+### 📰 NEWSLETTER FUNCTIONS
 
-- **Libsignal Fixes**: Cleaned up logs for a cleaner and more informative output.
+<details>
+<summary><b>Click to expand Newsletter features</b></summary>
 
-More features and improvements will be added in the future.
-
-## Feature Examples
-
-### NEWSLETTER
-
-- **To get info newsletter**
-``` ts
+#### 📊 Get Newsletter Info
+```typescript
+// By invite
 const metadata = await sock.newsletterMetadata("invite", "xxxxx")
-// or
+// By JID
 const metadata = await sock.newsletterMetadata("jid", "abcd@newsletter")
 console.log(metadata)
 ```
-- **To update the description of a newsletter**
-``` ts
+
+#### 📝 Update Newsletter Description
+```typescript
 await sock.newsletterUpdateDescription("abcd@newsletter", "New Description")
 ```
-- **To update the name of a newsletter**
-``` ts
+
+#### ✏️ Update Newsletter Name
+```typescript
 await sock.newsletterUpdateName("abcd@newsletter", "New Name")
-```  
-- **To update the profile picture of a newsletter**
-``` ts
+```
+
+#### 🖼️ Update Newsletter Picture
+```typescript
 await sock.newsletterUpdatePicture("abcd@newsletter", buffer)
 ```
-- **To remove the profile picture of a newsletter**
-``` ts
+
+#### 🗑️ Remove Newsletter Picture
+```typescript
 await sock.newsletterRemovePicture("abcd@newsletter")
 ```
-- **To mute notifications for a newsletter**
-``` ts
+
+#### 🔔 Newsletter Notifications
+```typescript
+// Unmute
 await sock.newsletterUnmute("abcd@newsletter")
-```
-- **To mute notifications for a newsletter**
-``` ts
+// Mute
 await sock.newsletterMute("abcd@newsletter")
 ```
-- **To create a newsletter**
-``` ts
+
+#### 🆕 Create Newsletter
+```typescript
 const metadata = await sock.newsletterCreate("Newsletter Name", "Newsletter Description")
 console.log(metadata)
 ```
-- **To delete a newsletter**
-``` ts
+
+#### 🗑️ Delete Newsletter
+```typescript
 await sock.newsletterDelete("abcd@newsletter")
 ```
-- **To follow a newsletter**
-``` ts
+
+#### 👥 Follow/Unfollow Newsletter
+```typescript
+// Follow
 await sock.newsletterFollow("abcd@newsletter")
-```
-- **To unfollow a newsletter**
-``` ts
+// Unfollow
 await sock.newsletterUnfollow("abcd@newsletter")
 ```
-- **To send reaction**
-``` ts
-// jid, id message & emoticon
-// way to get the ID is to copy the message url from channel
-// Example: [ https://whatsapp.com/channel/xxxxx/175 ]
-// The last number of the URL is the ID
+
+#### 😀 Send Reaction
+```typescript
+// Format: JID, message ID & emoticon
+// Get ID from message URL: https://whatsapp.com/channel/xxxxx/175
 const id = "175"
 await sock.newsletterReactMessage("abcd@newsletter", id, "🥳")
 ```
+</details>
 
-### BUTTON MESSAGE & INTERACTIVE MESSAGE
+### 🎛️ BUTTON & INTERACTIVE MESSAGES
 
-- **To send button with text**
-```ts
+<details>
+<summary><b>Click to expand Button & Interactive features</b></summary>
+
+#### 📝 Send Button with Text
+```typescript
 const buttons = [
   { buttonId: 'id1', buttonText: { displayText: 'Button 1' }, type: 1 },
   { buttonId: 'id2', buttonText: { displayText: 'Button 2' }, type: 1 }
@@ -128,8 +172,9 @@ const buttonMessage = {
 
 await sock.sendMessage(id, buttonMessage, { quoted: null })
 ```
-- **To send button with image**
-```ts
+
+#### 🖼️ Send Button with Image
+```typescript
 const buttons = [
   { buttonId: 'id1', buttonText: { displayText: 'Button 1' }, type: 1 },
   { buttonId: 'id2', buttonText: { displayText: 'Button 2' }, type: 1 }
@@ -145,10 +190,10 @@ const buttonMessage = {
 }
 
 await sock.sendMessage(id, buttonMessage, { quoted: null })
-
 ```
-- **To send button with video**
-```ts
+
+#### 🎬 Send Button with Video
+```typescript
 const buttons = [
   { buttonId: 'id1', buttonText: { displayText: 'Button 1' }, type: 1 },
   { buttonId: 'id2', buttonText: { displayText: 'Button 2' }, type: 1 }
@@ -166,8 +211,8 @@ const buttonMessage = {
 await sock.sendMessage(id, buttonMessage, { quoted: null })
 ```
 
-- **To send interactive message**
-```ts
+#### 🔄 Send Interactive Message
+```typescript
 const interactiveButtons = [
      {
         name: "quick_reply",
@@ -202,8 +247,9 @@ const interactiveMessage = {
 
 await sock.sendMessage(id, interactiveMessage, { quoted: null })
 ```
-- **To send interactive message with image**
-```ts
+
+#### 🖼️ Send Interactive Message with Image
+```typescript
 const interactiveButtons = [
      {
         name: "quick_reply",
@@ -239,8 +285,9 @@ const interactiveMessage = {
 
 await sock.sendMessage(id, interactiveMessage, { quoted: null })
 ```
-- **To send interactive message with video**
-```ts
+
+#### 🎬 Send Interactive Message with Video
+```typescript
 const interactiveButtons = [
      {
         name: "quick_reply",
@@ -276,17 +323,18 @@ const interactiveMessage = {
 
 await sock.sendMessage(id, interactiveMessage, { quoted: null })
 ```
+</details>
 
-### AI Icon
+### 🤖 AI ICON
 
-```ts
-// just add "ai: true" function to sendMessage
-await sock.sendMessage(id, { text: "Hello Wold", ai: true })
+```typescript
+// Just add "ai: true" to sendMessage
+await sock.sendMessage(id, { text: "Hello World", ai: true })
 ```
 
-### Custom Code Pairing
+### 🔐 CUSTOM CODE PAIRING
 
-```ts
+```typescript
 if(usePairingCode && !sock.authState.creds.registered) {
     const phoneNumber = await question('Please enter your mobile phone number:\n')
     const custom = "SH1Z0D3V" // must be 8 digits, can be letters or numbers
@@ -295,8 +343,23 @@ if(usePairingCode && !sock.authState.creds.registered) {
 }
 ```
 
-## Reporting Issues
-If you encounter any issues while using this repository or any part of it, please feel free to open a [new issue](https://github.com/shizo-devs/baileys/issues) here.
+---
 
-## Notes
-Everything other than the modifications mentioned above remains the same as the original repository. You can check out the original repository at [WhiskeySockets](https://github.com/WhiskeySockets/Baileys)
+## 🐛 Reporting Issues
+
+If you encounter any issues while using this repository, please feel free to open a [new issue](https://github.com/shizo-devs/baileys/issues).
+
+---
+
+## 📝 Notes
+
+Everything other than the modifications mentioned above remains the same as the original repository. You can check out the original repository at [WhiskeySockets](https://github.com/WhiskeySockets/Baileys).
+
+---
+
+<div align="center">
+  
+  ⭐ **Star this repository if you find it useful!** ⭐
+  
+  <i>Powered by Baileys-Elite - Enhancing your WhatsApp development experience</i>
+</div>
