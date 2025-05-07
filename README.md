@@ -72,7 +72,7 @@ npm install baileys-elite
 <div style="background: rgba(6, 182, 212, 0.1); border-radius: 5px; padding: 10px; flex: 1;">
 
 ```typescript
-// ESM
+// ESM 
 import makeWASocket from 'baileys-elite'
 ```
 </div>
