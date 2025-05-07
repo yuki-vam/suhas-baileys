@@ -1,5 +1,9 @@
 name: README to Website
 
+# Add permissions for GitHub Pages deployment
+permissions:
+  contents: write
+
 on:
   push:
     branches:
@@ -299,3 +303,4 @@ jobs:
         with:
           folder: public
           branch: gh-pages
+          token: ${{ secrets.GITHUB_TOKEN }}
