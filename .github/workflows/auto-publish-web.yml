@@ -20,7 +20,9 @@ jobs:
         with:
           node-version: '18'
 
-
+      - name: Install dependencies
+        run: |
+          npm install -g marked
           npm install -g html-minifier
 
       - name: Generate website from README
