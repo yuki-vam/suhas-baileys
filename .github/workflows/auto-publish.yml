@@ -83,35 +83,48 @@ jobs:
           git tag -a $VERSION -m "Release $VERSION"
           git push origin $VERSION
 
-      - name: Publish in NPM (as `baileys-elite`) - Regular Version
-        if: steps.get_previous_version.outputs.version_increased == 'true' && steps.get_previous_version.outputs.is_beta == 'false'
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      
-      - name: Publish in NPM (as `baileys-elite`) - Beta Version
-        if: steps.get_previous_version.outputs.version_increased == 'true' && steps.get_previous_version.outputs.is_beta == 'true'
-        run: npm publish --access public --tag beta
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      
-      - name: Publish in NPM (Baileys-elite) - Regular Version
-        if: steps.get_previous_version.outputs.version_increased == 'true' && steps.get_previous_version.outputs.is_beta == 'false'
+      - name: Get Original Package Name
+        if: steps.get_previous_version.outputs.version_increased == 'true'
+        id: get_original_name
         run: |
-          npx json -I -f package.json -e "this.name='baileys-elite'"
-          npm publish --access public --//registry.npmjs.org/:_authToken=$NPM_TOKEN
-          npx json -I -f package.json -e "this.name='baileys-elite'"
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          ORIGINAL_NAME=$(node -p "require('./package.json').name")
+          echo "original_name=$ORIGINAL_NAME" >> $GITHUB_OUTPUT
 
-      - name: Publish in NPM (Baileys-elite) - Beta Version
+      - name: Publish in NPM - Regular Version
+        if: steps.get_previous_version.outputs.version_increased == 'true' && steps.get_previous_version.outputs.is_beta == 'false'
+        run: |
+          # First publish with original package name
+          npm publish --access public
+          
+          # Change package name and publish as baileys-elite if different
+          if [ "$ORIGINAL_NAME" != "baileys-elite" ]; then
+            ORIGINAL_NAME_BACKUP=$ORIGINAL_NAME
+            npx json -I -f package.json -e "this.name='baileys-elite'"
+            npm publish --access public --//registry.npmjs.org/:_authToken=$NPM_TOKEN
+            npx json -I -f package.json -e "this.name='$ORIGINAL_NAME_BACKUP'"
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          ORIGINAL_NAME: ${{ steps.get_original_name.outputs.original_name }}
+      
+      - name: Publish in NPM - Beta Version
         if: steps.get_previous_version.outputs.version_increased == 'true' && steps.get_previous_version.outputs.is_beta == 'true'
         run: |
-          npx json -I -f package.json -e "this.name='baileys-elite'"
-          npm publish --access public --tag beta --//registry.npmjs.org/:_authToken=$NPM_TOKEN
-          npx json -I -f package.json -e "this.name='baileys-elite'"
+          # First publish with original package name
+          npm publish --access public --tag beta
+          
+          # Change package name and publish as baileys-elite if different
+          if [ "$ORIGINAL_NAME" != "baileys-elite" ]; then
+            ORIGINAL_NAME_BACKUP=$ORIGINAL_NAME
+            npx json -I -f package.json -e "this.name='baileys-elite'"
+            npm publish --access public --tag beta --//registry.npmjs.org/:_authToken=$NPM_TOKEN
+            npx json -I -f package.json -e "this.name='$ORIGINAL_NAME_BACKUP'"
+          fi
         env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          ORIGINAL_NAME: ${{ steps.get_original_name.outputs.original_name }}
 
       - name: Generate Changelog
         if: steps.get_previous_version.outputs.version_increased == 'true'
