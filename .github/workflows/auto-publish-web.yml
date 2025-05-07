@@ -19,12 +19,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
 
-      - name: Install dependencies
-        run: |
-          npm install -g markdown-to-html-cli
-          npm install -g tailwindcss postcss autoprefixer
+
           npm install -g html-minifier
 
       - name: Generate website from README
@@ -282,11 +278,8 @@ jobs:
           </html>
           EOL
           
-          # Convert README to HTML and insert into template
-          markdown-to-html-cli --input public/readme.md --output temp.html
-          
-          # Extract content and insert into template
-          content=$(cat temp.html | sed -n '/<body>/,/<\/body>/p' | sed '1d;$d')
+          # Convert README to HTML
+          content=$(marked public/readme.md)
           
           # Replace placeholder in template with content
           sed "s|<!-- README CONTENT WILL BE INSERTED HERE -->|$content|g" template.html > public/index.html
