@@ -22,7 +22,7 @@
 </div>
 
 <div style="border-left: 4px solid #3B82F6; padding-left: 15px; margin: 25px 0;">
-  <h2>🌟 Supercharged WhatsApp API 🌟</h2>
+  <h2>⚡️ Supercharged WhatsApp API 🌟</h2>
   <p><i>Elevate your messaging experience with the most advanced WhatsApp Web API solution available</i></p>
 </div>
 
