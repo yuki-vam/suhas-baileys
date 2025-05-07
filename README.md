@@ -6,7 +6,7 @@
   <br>
   
   <div style="background: linear-gradient(90deg, #6366F1, #3B82F6, #2DD4BF); padding: 8px; border-radius: 10px; margin: 15px 0;">
-    <span style="font-size: 18px; font-weight: bold; color: white;">🔥 Ultimate WhatsApp Web API Experience 🔥</span>
+    <span style="font-size: 18px; font-weight: bold; color: white;">🔥 Ultimate WhatsApp Web API Experience 🥵</span>
   </div>
   
   ![TypeScript](https://img.shields.io/badge/-%F0%9F%94%B7%20TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white&labelColor=0D1117)
