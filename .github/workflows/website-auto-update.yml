@@ -57,13 +57,13 @@ jobs:
           const htmlContent = marked.parse(readmeContent);
           
           // Create HTML template
-          const htmlTemplate = `
+          const htmlTemplate = \`
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
+  <title>\${title}</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -299,7 +299,7 @@ jobs:
   <div class="container">
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
-        <h2><i class="fas fa-book"></i> ${title}</h2>
+        <h2><i class="fas fa-book"></i> \${title}</h2>
       </div>
       <div id="toc" class="toc">
         <!-- TOC will be generated here -->
@@ -308,10 +308,10 @@ jobs:
     
     <main class="content">
       <div class="readme-content">
-        ${htmlContent}
+        \${htmlContent}
       </div>
       <div class="last-updated">
-        Last updated: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}
+        Last updated: \${new Date().toLocaleDateString()} at \${new Date().toLocaleTimeString()}
       </div>
     </main>
   </div>
@@ -361,7 +361,7 @@ jobs:
   </script>
 </body>
 </html>
-          `;
+          \`;
           
           // Write to index.html
           fs.writeFileSync('index.html', htmlTemplate);
