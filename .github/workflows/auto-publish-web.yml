@@ -37,956 +37,251 @@ jobs:
           # Create HTML template with awesome design
           cat > template.html << 'EOL'
           <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Awesome Project</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.27.0/themes/prism-tomorrow.min.css">
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
-    
-    /* Add loading animation */
-    .loader {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: #f8fafc;
-      z-index: 9999;
-      transition: opacity 0.5s, visibility 0.5s;
-    }
-    
-    .loader.dark {
-      background-color: #0f172a;
-    }
-    
-    .loader-spinner {
-      width: 50px;
-      height: 50px;
-      border: 5px solid rgba(79, 70, 229, 0.2);
-      border-radius: 50%;
-      border-top-color: #4f46e5;
-      animation: spin 1s ease-in-out infinite;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
-    .loader.hidden {
-      opacity: 0;
-      visibility: hidden;
-    }
-    
-    :root {
-      --primary: #4f46e5;
-      --primary-light: #6366f1;
-      --primary-dark: #4338ca;
-      --secondary: #10b981;
-      --accent: #f97316;
-      --dark: #1e293b;
-      --text: #4b5563;
-      --light: #f9fafb;
-    }
-    
-    body {
-      font-family: 'Inter', sans-serif;
-      scroll-behavior: smooth;
-      color: var(--text);
-      background-color: #f8fafc;
-    }
-    
-    h1, h2, h3, h4, h5, h6 {
-      font-family: 'Poppins', sans-serif;
-    }
-    
-    .markdown-body {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 2rem;
-    }
-    
-    .markdown-body h1 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      margin-bottom: 1.5rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 2px solid var(--primary);
-      color: var(--dark);
-      position: relative;
-    }
-    
-    .markdown-body h1::after {
-      content: "";
-      position: absolute;
-      bottom: -2px;
-      left: 0;
-      width: 100px;
-      height: 4px;
-      background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
-      border-radius: 2px;
-    }
-    
-    .markdown-body h2 {
-      font-size: 1.8rem;
-      font-weight: 600;
-      margin-top: 2rem;
-      margin-bottom: 1rem;
-      color: var(--dark);
-      padding-bottom: 0.3rem;
-      border-bottom: 1px solid #e5e7eb;
-    }
-    
-    .markdown-body h3 {
-      font-size: 1.4rem;
-      font-weight: 600;
-      margin-top: 1.5rem;
-      margin-bottom: 0.75rem;
-      color: #374151;
-    }
-    
-    .markdown-body p {
-      margin-bottom: 1rem;
-      line-height: 1.7;
-      color: var(--text);
-    }
-    
-    .markdown-body code {
-      background-color: #f3f4f6;
-      padding: 0.2rem 0.4rem;
-      border-radius: 0.25rem;
-      font-size: 0.9em;
-      color: var(--primary);
-      font-family: 'Fira Code', monospace;
-    }
-    
-    .code-block-wrapper {
-      position: relative;
-      margin: 1.5rem 0;
-      border-radius: 0.5rem;
-      overflow: hidden;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .code-block-wrapper:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    }
-    
-    .code-block-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background-color: #2d3748;
-      padding: 0.5rem 1rem;
-      border-top-left-radius: 0.5rem;
-      border-top-right-radius: 0.5rem;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.875rem;
-      color: #e2e8f0;
-    }
-    
-    .code-language {
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-    }
-    
-    .code-language i {
-      margin-right: 0.5rem;
-    }
-    
-    .copy-button {
-      background-color: #4b5563;
-      border: none;
-      border-radius: 0.25rem;
-      color: #e2e8f0;
-      padding: 0.25rem 0.5rem;
-      font-size: 0.75rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-    }
-    
-    .copy-button i {
-      margin-right: 0.25rem;
-    }
-    
-    .copy-button:hover {
-      background-color: #6b7280;
-    }
-    
-    .copy-feedback {
-      position: absolute;
-      top: 0.5rem;
-      right: 1rem;
-      background-color: var(--secondary);
-      color: white;
-      padding: 0.25rem 0.5rem;
-      border-radius: 0.25rem;
-      font-size: 0.75rem;
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-    }
-    
-    .markdown-body pre {
-      background-color: #1e293b;
-      border-radius: 0 0 0.5rem 0.5rem;
-      padding: 1rem;
-      overflow-x: auto;
-      margin: 0;
-      border-top: none;
-    }
-    
-    .markdown-body pre code {
-      background-color: transparent;
-      color: #e2e8f0;
-      padding: 0;
-      font-family: 'Fira Code', monospace;
-    }
-    
-    .markdown-body a {
-      color: var(--primary);
-      text-decoration: none;
-      font-weight: 500;
-      transition: color 0.2s;
-      position: relative;
-    }
-    
-    .markdown-body a::after {
-      content: '';
-      position: absolute;
-      width: 100%;
-      height: 1px;
-      bottom: -1px;
-      left: 0;
-      background-color: var(--primary);
-      transform: scaleX(0);
-      transform-origin: bottom right;
-      transition: transform 0.3s ease-out;
-    }
-    
-    .markdown-body a:hover {
-      color: var(--primary-light);
-    }
-    
-    .markdown-body a:hover::after {
-      transform: scaleX(1);
-      transform-origin: bottom left;
-    }
-    
-    .markdown-body ul, .markdown-body ol {
-      padding-left: 2rem;
-      margin-bottom: 1rem;
-    }
-    
-    .markdown-body li {
-      margin-bottom: 0.5rem;
-      color: var(--text);
-      position: relative;
-    }
-    
-    .markdown-body ul li::before {
-      content: "•";
-      color: var(--primary);
-      font-weight: bold;
-      display: inline-block;
-      width: 1em;
-      margin-left: -1em;
-    }
-    
-    .markdown-body img {
-      max-width: 100%;
-      border-radius: 0.5rem;
-      margin: 1.5rem 0;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-      transition: transform 0.3s ease;
-    }
-    
-    .markdown-body img:hover {
-      transform: scale(1.01);
-    }
-    
-    .markdown-body blockquote {
-      border-left: 4px solid var(--primary);
-      padding: 1rem;
-      margin: 1.5rem 0;
-      background-color: #f3f4f6;
-      border-radius: 0 0.5rem 0.5rem 0;
-      font-style: italic;
-      color: #6b7280;
-    }
-    
-    .markdown-body table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 1.5rem 0;
-      border-radius: 0.5rem;
-      overflow: hidden;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    }
-    
-    .markdown-body table th, .markdown-body table td {
-      padding: 0.75rem 1rem;
-      border: 1px solid #e5e7eb;
-    }
-    
-    .markdown-body table th {
-      background-color: #f9fafb;
-      font-weight: 600;
-      text-align: left;
-      color: var(--dark);
-    }
-    
-    .markdown-body table tr:nth-child(even) {
-      background-color: #f3f4f6;
-    }
-    
-    .top-nav {
-      background: linear-gradient(90deg, var(--primary-dark) 0%, var(--primary) 100%);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    }
-    
-    .nav-link {
-      position: relative;
-      padding: 0.5rem 0;
-    }
-    
-    .nav-link::after {
-      content: '';
-      position: absolute;
-      width: 100%;
-      height: 2px;
-      bottom: 0;
-      left: 0;
-      background-color: white;
-      transform: scaleX(0);
-      transform-origin: bottom right;
-      transition: transform 0.3s ease-out;
-    }
-    
-    .nav-link:hover::after {
-      transform: scaleX(1);
-      transform-origin: bottom left;
-    }
-    
-    .scroll-to-top {
-      position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      display: none;
-      background-color: var(--primary);
-      color: white;
-      width: 3rem;
-      height: 3rem;
-      border-radius: 9999px;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-      transition: all 0.3s;
-      z-index: 50;
-    }
-    
-    .scroll-to-top:hover {
-      background-color: var(--primary-light);
-      transform: translateY(-4px);
-    }
-    
-    .project-card {
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .project-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    }
-    
-    .footer-link {
-      transition: transform 0.3s ease;
-      display: inline-block;
-    }
-    
-    .footer-link:hover {
-      transform: translateY(-2px);
-    }
-    
-    @media (max-width: 768px) {
-      .markdown-body {
-        padding: 1.5rem;
-      }
-      
-      .markdown-body h1 {
-        font-size: 2rem;
-      }
-      
-      .markdown-body h2 {
-        font-size: 1.5rem;
-      }
-      
-      .markdown-body h3 {
-        font-size: 1.25rem;
-      }
-    }
-    
-    /* Dark mode toggle */
-    .dark-mode-toggle {
-      cursor: pointer;
-      padding: 0.5rem;
-      border-radius: 9999px;
-      transition: background-color 0.2s;
-    }
-    
-    .dark-mode-toggle:hover {
-      background-color: rgba(255, 255, 255, 0.1);
-    }
-    
-    /* Animations */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .fade-in {
-      animation: fadeIn 0.5s ease forwards;
-    }
-  </style>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap">
-</head>
-<body class="bg-gray-50">
-  <!-- Page Loader -->
-  <div class="loader" id="pageLoader">
-    <div class="loader-spinner"></div>
-  </div>
-  
-  <header class="top-nav text-white py-4 sticky top-0 z-10">
-    <div class="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between">
-      <div class="flex items-center mb-4 md:mb-0">
-        <i class="fas fa-book-open text-2xl mr-3"></i>
-        <h1 class="text-2xl font-bold">Awesome Project</h1>
-      </div>
-      <nav>
-        <ul class="flex space-x-6 items-center">
-          <li><a href="#" class="nav-link hover:text-indigo-200 transition"><i class="fas fa-home mr-1"></i> Home</a></li>
-          <li><a href="#features" class="nav-link hover:text-indigo-200 transition"><i class="fas fa-star mr-1"></i> Features</a></li>
-          <li><a href="#docs" class="nav-link hover:text-indigo-200 transition"><i class="fas fa-book mr-1"></i> Docs</a></li>
-          <li><a href="https://github.com/USERNAME/REPO" class="nav-link hover:text-indigo-200 transition"><i class="fab fa-github mr-1"></i> GitHub</a></li>
-          <li class="dark-mode-toggle ml-2" id="darkModeToggle">
-            <i class="fas fa-moon"></i>
-          </li>
-        </ul>
-      </nav>
-    </div>
-  </header>
-  
-  <div class="bg-gradient-to-b from-indigo-600 to-indigo-800 text-white py-16 fade-in">
-    <div class="container mx-auto px-4 text-center">
-      <h1 class="text-4xl md:text-5xl font-bold mb-4">Welcome to Awesome Project</h1>
-      <p class="text-xl mb-8 max-w-2xl mx-auto">A beautifully designed template for your README documentation.</p>
-      <div class="flex justify-center space-x-4">
-        <a href="#docs" class="bg-white text-indigo-600 hover:bg-indigo-100 transition px-6 py-3 rounded-lg font-medium flex items-center">
-          <i class="fas fa-book-open mr-2"></i> Get Started
-        </a>
-        <a href="https://github.com/USERNAME/REPO" class="bg-transparent border-2 border-white hover:bg-white hover:text-indigo-600 transition px-6 py-3 rounded-lg font-medium flex items-center">
-          <i class="fab fa-github mr-2"></i> View on GitHub
-        </a>
-      </div>
-    </div>
-  </div>
-  
-  <section id="features" class="py-16 bg-white">
-    <div class="container mx-auto px-4">
-      <h2 class="text-3xl font-bold text-center mb-12">Key Features</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="project-card bg-gray-50 rounded-lg p-6 shadow-md text-center">
-          <div class="bg-indigo-100 text-indigo-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-magic text-xl"></i>
-          </div>
-          <h3 class="text-xl font-semibold mb-2">Beautifully Styled</h3>
-          <p class="text-gray-600">Clean and modern design with customizable styles for your documentation.</p>
-        </div>
-        <div class="project-card bg-gray-50 rounded-lg p-6 shadow-md text-center">
-          <div class="bg-indigo-100 text-indigo-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-code text-xl"></i>
-          </div>
-          <h3 class="text-xl font-semibold mb-2">Code Highlighting</h3>
-          <p class="text-gray-600">Syntax highlighting with copy-to-clipboard functionality for all code blocks.</p>
-        </div>
-        <div class="project-card bg-gray-50 rounded-lg p-6 shadow-md text-center">
-          <div class="bg-indigo-100 text-indigo-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-mobile-alt text-xl"></i>
-          </div>
-          <h3 class="text-xl font-semibold mb-2">Fully Responsive</h3>
-          <p class="text-gray-600">Looks great on all devices, from mobile phones to desktop screens.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-  
-  <main id="docs" class="container mx-auto py-12 px-4">
-    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-      <div class="markdown-body fade-in">
-        <h1>Awesome Project Documentation</h1>
-        <p>Welcome to the Awesome Project documentation. This template includes beautifully styled markdown elements and code blocks with copy functionality.</p>
-        
-        <h2>Installation</h2>
-        <p>You can install this project using npm or yarn:</p>
-        
-        <div class="code-block-wrapper">
-          <div class="code-block-header">
-            <span class="code-language"><i class="fas fa-terminal"></i>bash</span>
-            <button class="copy-button" onclick="copyCode(this)">
-              <i class="far fa-copy"></i> Copy
-            </button>
-            <span class="copy-feedback">Copied!</span>
-          </div>
-          <pre><code class="language-bash">npm install awesome-project
-# or
-yarn add awesome-project</code></pre>
-        </div>
-        
-        <h2>Usage</h2>
-        <p>Here's a simple example of how to use this project in your JavaScript code:</p>
-        
-        <div class="code-block-wrapper">
-          <div class="code-block-header">
-            <span class="code-language"><i class="fab fa-js"></i>javascript</span>
-            <button class="copy-button" onclick="copyCode(this)">
-              <i class="far fa-copy"></i> Copy
-            </button>
-            <span class="copy-feedback">Copied!</span>
-          </div>
-          <pre><code class="language-javascript">import { AwesomeComponent } from 'awesome-project';
-
-// Initialize the component
-const awesome = new AwesomeComponent({
-  theme: 'dark',
-  animation: true,
-  speed: 'fast'
-});
-
-// Render the component
-awesome.render('#app');</code></pre>
-        </div>
-        
-        <h2>API Reference</h2>
-        <p>Below is the API reference for the main components:</p>
-        
-        <h3>AwesomeComponent</h3>
-        <p>The primary component with the following options:</p>
-        
-        <table>
-          <thead>
-            <tr>
-              <th>Option</th>
-              <th>Type</th>
-              <th>Default</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>theme</td>
-              <td>string</td>
-              <td>'light'</td>
-              <td>The visual theme of the component ('light' or 'dark')</td>
-            </tr>
-            <tr>
-              <td>animation</td>
-              <td>boolean</td>
-              <td>true</td>
-              <td>Whether to enable animations</td>
-            </tr>
-            <tr>
-              <td>speed</td>
-              <td>string</td>
-              <td>'medium'</td>
-              <td>Animation speed ('slow', 'medium', 'fast')</td>
-            </tr>
-          </tbody>
-        </table>
-        
-        <h3>Methods</h3>
-        <p>These are the main methods available on the AwesomeComponent instance:</p>
-        
-        <div class="code-block-wrapper">
-          <div class="code-block-header">
-            <span class="code-language"><i class="fab fa-js"></i>javascript</span>
-            <button class="copy-button" onclick="copyCode(this)">
-              <i class="far fa-copy"></i> Copy
-            </button>
-            <span class="copy-feedback">Copied!</span>
-          </div>
-          <pre><code class="language-javascript">// Render the component to a DOM element
-awesome.render(selector);
-
-// Update component options
-awesome.update({ theme: 'dark' });
-
-// Destroy the component and clean up resources
-awesome.destroy();
-
-// Add event listener
-awesome.on('change', (event) => {
-  console.log('Component changed:', event);
-});</code></pre>
-        </div>
-        
-        <h2>Advanced Configuration</h2>
-        <p>For advanced configuration, create a config file in your project root:</p>
-        
-        <div class="code-block-wrapper">
-          <div class="code-block-header">
-            <span class="code-language"><i class="fab fa-js"></i>javascript</span>
-            <button class="copy-button" onclick="copyCode(this)">
-              <i class="far fa-copy"></i> Copy
-            </button>
-            <span class="copy-feedback">Copied!</span>
-          </div>
-          <pre><code class="language-javascript">// awesome.config.js
-module.exports = {
-  theme: {
-    primary: '#4f46e5',
-    secondary: '#10b981',
-    text: '#4b5563',
-    background: '#ffffff'
-  },
-  plugins: [
-    'awesome-plugin-responsive',
-    'awesome-plugin-animation'
-  ],
-  build: {
-    minify: true,
-    sourcemap: process.env.NODE_ENV !== 'production'
-  }
-};</code></pre>
-        </div>
-        
-        <blockquote>
-          <p>Note: Advanced configuration requires version 2.0.0 or later.</p>
-        </blockquote>
-      </div>
-    </div>
-  </main>
-  
-  <footer class="bg-gray-800 text-white py-12 mt-12">
-    <div class="container mx-auto px-4">
-      <div class="flex flex-col md:flex-row justify-between items-center">
-        <div class="mb-8 md:mb-0">
-          <h3 class="text-xl font-semibold flex items-center">
-            <i class="fas fa-book-open text-xl mr-2"></i>
-            Awesome Project
-          </h3>
-          <p class="text-gray-400 mt-2">A beautiful documentation template for your projects</p>
-          <div class="mt-4 flex space-x-4">
-            <a href="https://github.com/USERNAME/REPO" class="footer-link text-gray-400 hover:text-white transition">
-              <i class="fab fa-github text-xl"></i>
-            </a>
-            <a href="https://twitter.com/USERNAME" class="footer-link text-gray-400 hover:text-white transition">
-              <i class="fab fa-twitter text-xl"></i>
-            </a>
-            <a href="#" class="footer-link text-gray-400 hover:text-white transition">
-              <i class="fab fa-discord text-xl"></i>
-            </a>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-8">
-          <div>
-            <h4 class="font-semibold mb-3">Documentation</h4>
-            <ul class="space-y-2">
-              <li><a href="#" class="text-gray-400 hover:text-white transition">Getting Started</a></li>
-              <li><a href="#" class="text-gray-400 hover:text-white transition">API Reference</a></li>
-              <li><a href="#" class="text-gray-400 hover:text-white transition">Examples</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 class="font-semibold mb-3">Resources</h4>
-            <ul class="space-y-2">
-              <li><a href="#" class="text-gray-400 hover:text-white transition">Blog</a></li>
-              <li><a href="#" class="text-gray-400 hover:text-white transition">Tutorials</a></li>
-              <li><a href="#" class="text-gray-400 hover:text-white transition">Support</a></li>
-            </ul>
-          </div>
-          <div class="col-span-2 md:col-span-1 mt-6 md:mt-0">
-            <h4 class="font-semibold mb-3">Subscribe to Updates</h4>
-            <div class="flex mt-2">
-              <input type="email" placeholder="Enter your email" class="px-3 py-2 bg-gray-700 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white w-full">
-              <button class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-r-lg transition">
-                <i class="fas fa-paper-plane"></i>
-              </button>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Baileys-elite</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.27.0/themes/prism-tomorrow.min.css">
+            <style>
+              @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+              
+              body {
+                font-family: 'Inter', sans-serif;
+                scroll-behavior: smooth;
+              }
+              
+              .markdown-body {
+                max-width: 900px;
+                margin: 0 auto;
+                padding: 2rem;
+              }
+              
+              .markdown-body h1 {
+                font-size: 2.5rem;
+                font-weight: 700;
+                margin-bottom: 1.5rem;
+                padding-bottom: 0.5rem;
+                border-bottom: 2px solid #4f46e5;
+                color: #111827;
+              }
+              
+              .markdown-body h2 {
+                font-size: 1.8rem;
+                font-weight: 600;
+                margin-top: 2rem;
+                margin-bottom: 1rem;
+                color: #1f2937;
+              }
+              
+              .markdown-body h3 {
+                font-size: 1.4rem;
+                font-weight: 600;
+                margin-top: 1.5rem;
+                margin-bottom: 0.75rem;
+                color: #374151;
+              }
+              
+              .markdown-body p {
+                margin-bottom: 1rem;
+                line-height: 1.7;
+                color: #4b5563;
+              }
+              
+              .markdown-body code {
+                background-color: #f3f4f6;
+                padding: 0.2rem 0.4rem;
+                border-radius: 0.25rem;
+                font-size: 0.9em;
+                color: #6366f1;
+              }
+              
+              .markdown-body pre {
+                background-color: #1e293b;
+                border-radius: 0.5rem;
+                padding: 1rem;
+                overflow-x: auto;
+                margin: 1.5rem 0;
+              }
+              
+              .markdown-body pre code {
+                background-color: transparent;
+                color: #e2e8f0;
+                padding: 0;
+              }
+              
+              .markdown-body a {
+                color: #4f46e5;
+                text-decoration: none;
+                font-weight: 500;
+                transition: color 0.2s;
+              }
+              
+              .markdown-body a:hover {
+                color: #6366f1;
+                text-decoration: underline;
+              }
+              
+              .markdown-body ul, .markdown-body ol {
+                padding-left: 2rem;
+                margin-bottom: 1rem;
+              }
+              
+              .markdown-body li {
+                margin-bottom: 0.5rem;
+                color: #4b5563;
+              }
+              
+              .markdown-body img {
+                max-width: 100%;
+                border-radius: 0.5rem;
+                margin: 1.5rem 0;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+              }
+              
+              .markdown-body blockquote {
+                border-left: 4px solid #4f46e5;
+                padding-left: 1rem;
+                margin-left: 0;
+                margin-right: 0;
+                font-style: italic;
+                color: #6b7280;
+              }
+              
+              .markdown-body table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 1.5rem 0;
+              }
+              
+              .markdown-body table th, .markdown-body table td {
+                padding: 0.75rem;
+                border: 1px solid #e5e7eb;
+              }
+              
+              .markdown-body table th {
+                background-color: #f9fafb;
+                font-weight: 600;
+              }
+              
+              .top-nav {
+                background: linear-gradient(90deg, #4f46e5 0%, #6366f1 100%);
+              }
+              
+              .scroll-to-top {
+                position: fixed;
+                bottom: 2rem;
+                right: 2rem;
+                display: none;
+                background-color: #4f46e5;
+                color: white;
+                width: 3rem;
+                height: 3rem;
+                border-radius: 9999px;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                transition: all 0.2s;
+              }
+              
+              .scroll-to-top:hover {
+                background-color: #6366f1;
+                transform: translateY(-2px);
+              }
+            </style>
+          </head>
+          <body class="bg-gray-50">
+            <header class="top-nav text-white py-6">
+              <div class="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between">
+                <div class="flex items-center mb-4 md:mb-0">
+                  <i class="fas fa-book-open text-2xl mr-3"></i>
+                  <h1 class="text-2xl font-bold">Baileys-elite</h1>
+                </div>
+                <nav>
+                  <ul class="flex space-x-6">
+                    <li><a href="#" class="hover:text-indigo-200 transition"><i class="fas fa-home mr-1"></i> Home</a></li>
+                    <li><a href="https://github.com/shizo-devs/baileys" class="hover:text-indigo-200 transition"><i class="fab fa-github mr-1"></i> GitHub</a></li>
+                  </ul>
+                </nav>
+              </div>
+            </header>
+            
+            <main class="container mx-auto py-8">
+              <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="markdown-body">
+                  <!-- README CONTENT WILL BE INSERTED HERE -->
+                </div>
+              </div>
+            </main>
+            
+            <footer class="bg-gray-800 text-white py-8 mt-12">
+              <div class="container mx-auto px-4">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                  <div class="mb-4 md:mb-0">
+                    <h3 class="text-lg font-semibold">Baileys-elite</h3>
+                    <p class="text-gray-400">Powered by Shizo and Baileys-elite Team</p>
+                  </div>
+                  <div class="flex space-x-4">
+                    <a href="https://github.com/shizothetechie" class="text-gray-400 hover:text-white transition"><i class="fab fa-github text-xl"></i></a>
+                    <a href="https://twitter.com/theshizo" class="text-gray-400 hover:text-white transition"><i class="fab fa-twitter text-xl"></i></a>
+                  </div>
+                </div>
+                <div class="mt-6 text-center text-gray-400 text-sm">
+                  &copy; <span id="current-year"></span> Awesome Project. All rights reserved.
+                </div>
+              </div>
+            </footer>
+            
+            <div class="scroll-to-top" id="scrollToTop">
+              <i class="fas fa-arrow-up"></i>
             </div>
-          </div>
-        </div>
-      </div>
-      <div class="mt-8 pt-6 border-t border-gray-700 text-center text-gray-400 text-sm">
-        &copy; <span id="current-year"></span> Awesome Project. All rights reserved.
-      </div>
-    </div>
-  </footer>
-  
-  <div class="scroll-to-top" id="scrollToTop">
-    <i class="fas fa-arrow-up"></i>
-  </div>
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.27.0/components/prism-core.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.27.0/plugins/autoloader/prism-autoloader.min.js"></script>
-  
-  <script>
-// Hide loader when page is loaded
-window.addEventListener('load', () => {
-  const loader = document.getElementById('pageLoader');
-  loader.classList.add('hidden');
-  setTimeout(() => {
-    loader.style.display = 'none';
-  }, 500);
-});
-
-// Apply dark mode to loader if needed
-if (localStorage.getItem('darkMode') === 'true') {
-  document.getElementById('pageLoader').classList.add('dark');
-}
-
-// Set current year
-document.getElementById('current-year').textContent = new Date().getFullYear();
-
-// Get repo info from URL
-const repoUrl = window.location.href;
-const urlParts = repoUrl.split('/');
-const repoIndex = urlParts.indexOf('github.io');
-if (repoIndex !== -1 && urlParts[repoIndex - 1]) {
-  const username = urlParts[repoIndex - 1];
-  const repoLinks = document.querySelectorAll('a[href="https://github.com/USERNAME/REPO"]');
-  repoLinks.forEach(link => {
-    link.href = `https://github.com/${username}/${urlParts[repoIndex + 1] || ''}`;
-  });
-}
-
-// Scroll to top button
-const scrollToTopBtn = document.getElementById('scrollToTop');
-
-window.addEventListener('scroll', () => {
-  if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
-    scrollToTopBtn.style.display = 'flex';
-  } else {
-    scrollToTopBtn.style.display = 'none';
-  }
-});
-
-scrollToTopBtn.addEventListener('click', () => {
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth'
-  });
-});
-
-// Add syntax highlighting to code blocks
-document.addEventListener('DOMContentLoaded', () => {
-  Prism.highlightAll();
-  
-  // Add animation classes to elements
-  const elementsToAnimate = document.querySelectorAll('.project-card, .markdown-body h1, .markdown-body h2');
-  
-  const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-  };
-  
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('fade-in');
-        observer.unobserve(entry.target);
-      }
-    });
-  }, observerOptions);
-  
-  elementsToAnimate.forEach(el => {
-    observer.observe(el);
-  });
-});
-
-// Copy to clipboard functionality
-function copyCode(button) {
-  const pre = button.parentElement.nextElementSibling;
-  const code = pre.querySelector('code');
-  const text = code.textContent;
-  
-  navigator.clipboard.writeText(text).then(() => {
-    const feedback = button.parentElement.querySelector('.copy-feedback');
-    feedback.style.opacity = '1';
-    
-    setTimeout(() => {
-      feedback.style.opacity = '0';
-    }, 2000);
-  });
-}
-
-// Dark mode toggle
-const darkModeToggle = document.getElementById('darkModeToggle');
-const htmlElement = document.documentElement;
-const isDarkMode = localStorage.getItem('darkMode') === 'true';
-
-// Apply dark mode classes and styles
-function applyDarkMode() {
-  document.body.classList.add('dark-theme');
-  document.body.style.backgroundColor = '#0f172a';
-  document.body.style.color = '#e2e8f0';
-  darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-  
-  // Update markdown body styles
-  const markdownBody = document.querySelector('.markdown-body');
-  if (markdownBody) {
-    markdownBody.style.backgroundColor = '#1e293b';
-    const headings = markdownBody.querySelectorAll('h1, h2, h3, h4, h5, h6');
-    headings.forEach(heading => {
-      heading.style.color = '#e2e8f0';
-    });
-    
-    const paragraphs = markdownBody.querySelectorAll('p, li');
-    paragraphs.forEach(p => {
-      p.style.color = '#cbd5e1';
-    });
-    
-    const tables = markdownBody.querySelectorAll('table');
-    tables.forEach(table => {
-      table.style.borderColor = '#475569';
-      const cells = table.querySelectorAll('th, td');
-      cells.forEach(cell => {
-        cell.style.borderColor = '#475569';
-      });
-      const headers = table.querySelectorAll('th');
-      headers.forEach(header => {
-        header.style.backgroundColor = '#334155';
-        header.style.color = '#e2e8f0';
-      });
-    });
-    
-    const blockquotes = markdownBody.querySelectorAll('blockquote');
-    blockquotes.forEach(quote => {
-      quote.style.backgroundColor = '#1e293b';
-      quote.style.color = '#94a3b8';
-    });
-  }
-  
-  // Update feature cards
-  const cards = document.querySelectorAll('.project-card');
-  cards.forEach(card => {
-    card.style.backgroundColor = '#1e293b';
-    card.style.color = '#e2e8f0';
-    const cardTitle = card.querySelector('h3');
-    if (cardTitle) cardTitle.style.color = '#e2e8f0';
-    const cardText = card.querySelector('p');
-    if (cardText) cardText.style.color = '#cbd5e1';
-  });
-}
-
-// Remove dark mode classes and styles
-function removeDarkMode() {
-  document.body.classList.remove('dark-theme');
-  document.body.style.backgroundColor = '';
-  document.body.style.color = '';
-  darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-  
-  // Reset markdown body styles
-  const markdownBody = document.querySelector('.markdown-body');
-  if (markdownBody) {
-    markdownBody.style.backgroundColor = '';
-    const headings = markdownBody.querySelectorAll('h1, h2, h3, h4, h5, h6');
-    headings.forEach(heading => {
-      heading.style.color = '';
-    });
-    
-    const paragraphs = markdownBody.querySelectorAll('p, li');
-    paragraphs.forEach(p => {
-      p.style.color = '';
-    });
-    
-    const tables = markdownBody.querySelectorAll('table');
-    tables.forEach(table => {
-      table.style.borderColor = '';
-      const cells = table.querySelectorAll('th, td');
-      cells.forEach(cell => {
-        cell.style.borderColor = '';
-      });
-      const headers = table.querySelectorAll('th');
-      headers.forEach(header => {
-        header.style.backgroundColor = '';
-        header.style.color = '';
-      });
-    });
-    
-    const blockquotes = markdownBody.querySelectorAll('blockquote');
-    blockquotes.forEach(quote => {
-      quote.style.backgroundColor = '';
-      quote.style.color = '';
-    });
-  }
-  
-  // Reset feature cards
-  const cards = document.querySelectorAll('.project-card');
-  cards.forEach(card => {
-    card.style.backgroundColor = '';
-    card.style.color = '';
-    const cardTitle = card.querySelector('h3');
-    if (cardTitle) cardTitle.style.color = '';
-    const cardText = card.querySelector('p');
-    if (cardText) cardText.style.color = '';
-  });
-}
-
-// Initial dark mode setting
-if (isDarkMode) {
-  applyDarkMode();
-}
-
-// Toggle dark mode
-darkModeToggle.addEventListener('click', () => {
-  const isDarkModeNow = localStorage.getItem('darkMode') === 'true';
-  
-  if (isDarkModeNow) {
-    localStorage.setItem('darkMode', 'false');
-    removeDarkMode();
-  } else {
-    localStorage.setItem('darkMode', 'true');
-    applyDarkMode();
-  }
-});
-
-// Smooth scroll for anchor links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-  anchor.addEventListener('click', function(e) {
-    e.preventDefault();
-    
-    const targetId = this.getAttribute('href');
-    if (targetId === '#') return;
-    
-    const targetElement = document.querySelector(targetId);
-    if (targetElement) {
-      const headerOffset = 80;
-      const elementPosition = targetElement.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-      
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-    }
-  });
-});
-</script>
-</body>
-</html>
+            
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.27.0/components/prism-core.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.27.0/plugins/autoloader/prism-autoloader.min.js"></script>
+            
+            <script>
+              document.getElementById('current-year').textContent = new Date().getFullYear();
+              
+              // Get repo info from URL
+              const repoUrl = window.location.href;
+              const urlParts = repoUrl.split('/');
+              const repoIndex = urlParts.indexOf('github.io');
+              if (repoIndex !== -1 && urlParts[repoIndex - 1]) {
+                const username = urlParts[repoIndex - 1];
+                const repoLinks = document.querySelectorAll('a[href="https://github.com/shizo-devs/baileys"]');
+                repoLinks.forEach(link => {
+                  link.href = `https://github.com/${username}/${urlParts[repoIndex + 1] || ''}`;
+                });
+              }
+              
+              // Scroll to top button
+              const scrollToTopBtn = document.getElementById('scrollToTop');
+              
+              window.addEventListener('scroll', () => {
+                if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                  scrollToTopBtn.style.display = 'flex';
+                } else {
+                  scrollToTopBtn.style.display = 'none';
+                }
+              });
+              
+              scrollToTopBtn.addEventListener('click', () => {
+                window.scrollTo({
+                  top: 0,
+                  behavior: 'smooth'
+                });
+              });
+              
+              // Add syntax highlighting to code blocks
+              document.addEventListener('DOMContentLoaded', () => {
+                Prism.highlightAll();
+              });
+            </script>
+          </body>
+          </html>
           EOL
           
           # Convert README to HTML
