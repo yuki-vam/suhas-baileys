@@ -36,9 +36,9 @@ export const Browsers: BrowsersMap = {
 }
 
 export const getPlatformId = (browser: string) => {
-	const platformType = proto.DeviceProps.PlatformType[browser.toUpperCase()]
-	return platformType ? platformType.toString().charCodeAt(0).toString() : '49' //chrome
-}
+    const platformType = proto.DeviceProps.PlatformType[browser.toUpperCase()];
+    return platformType ? platformType.toString().charCodeAt(0).toString() : '49'; // chrome
+};
 
 export const BufferJSON = {
 	replacer: (k, value: any) => {
