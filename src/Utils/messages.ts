@@ -937,7 +937,7 @@ export const normalizeMessageContent = (content: WAMessageContent | null | undef
 			 || message?.statusMentionMessage
 			 || message?.pollCreationOptionImageMessage
 			 || message?.associatedChildMessage
-			 || message?.ShizogroupStatusMentionMessage
+			 || message?.groupStatusMentionMessage
 			 || message?.pollCreationMessageV4
 			 || message?.pollCreationMessageV5
 			 || message?.statusAddYours

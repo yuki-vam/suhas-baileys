@@ -1652,7 +1652,7 @@ message Message {
     optional PollResultSnapshotMessage pollResultSnapshotMessage = 88;
     optional FutureProofMessage pollCreationOptionImageMessage = 90;
     optional FutureProofMessage associatedChildMessage = 91;
-    optional FutureProofMessage ShizogroupStatusMentionMessage = 92;
+    optional FutureProofMessage groupStatusMentionMessage = 92;
     optional FutureProofMessage pollCreationMessageV4 = 93;
     optional FutureProofMessage pollCreationMessageV5 = 94;
     optional FutureProofMessage statusAddYours = 95;
@@ -2735,7 +2735,7 @@ message Message {
             LID_MIGRATION_MAPPING_SYNC = 22;
             REMINDER_MESSAGE = 23;
             BOT_MEMU_ONBOARDING_MESSAGE = 24;
-            SHIZO_STATUS_MENTION_MESSAGE = 25;
+            STATUS_MENTION_MESSAGE = 25;
             STOP_GENERATION_MESSAGE = 26;
             LIMIT_SHARING = 27;
         }

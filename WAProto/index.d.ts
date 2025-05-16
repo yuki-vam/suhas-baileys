@@ -17641,8 +17641,8 @@ export namespace proto {
         /** Message associatedChildMessage */
         associatedChildMessage?: (proto.Message.IFutureProofMessage|null);
 
-        /** Message ShizogroupStatusMentionMessage */
-        ShizogroupStatusMentionMessage?: (proto.Message.IFutureProofMessage|null);
+        /** Message groupStatusMentionMessage */
+        groupStatusMentionMessage?: (proto.Message.IFutureProofMessage|null);
 
         /** Message pollCreationMessageV4 */
         pollCreationMessageV4?: (proto.Message.IFutureProofMessage|null);
@@ -17900,8 +17900,8 @@ export namespace proto {
         /** Message associatedChildMessage. */
         public associatedChildMessage?: (proto.Message.IFutureProofMessage|null);
 
-        /** Message ShizogroupStatusMentionMessage. */
-        public ShizogroupStatusMentionMessage?: (proto.Message.IFutureProofMessage|null);
+        /** Message groupStatusMentionMessage. */
+        public groupStatusMentionMessage?: (proto.Message.IFutureProofMessage|null);
 
         /** Message pollCreationMessageV4. */
         public pollCreationMessageV4?: (proto.Message.IFutureProofMessage|null);
@@ -31291,7 +31291,7 @@ export namespace proto {
                 LID_MIGRATION_MAPPING_SYNC = 22,
                 REMINDER_MESSAGE = 23,
                 BOT_MEMU_ONBOARDING_MESSAGE = 24,
-                SHIZO_STATUS_MENTION_MESSAGE = 25,
+                STATUS_MENTION_MESSAGE = 25,
                 STOP_GENERATION_MESSAGE = 26,
                 LIMIT_SHARING = 27
             }
