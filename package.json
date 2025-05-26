@@ -1,6 +1,6 @@
 {
   "name": "baileys-elite",
-  "version": "0.0.5",
+  "version": "0.0.4",
   "description": "WhatsApp API",
   "keywords": [
     "whatsapp",
@@ -10,6 +10,7 @@
     "whatsapp-chat",
     "whatsapp-group",
     "automation",
+    "baileys-elite",
     "multi-device"
   ],
   "homepage": "https://github.com/shizo-devs/baileys",
