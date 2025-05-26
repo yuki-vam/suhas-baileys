@@ -1,6 +1,6 @@
 {
   "name": "baileys-elite",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "WhatsApp API",
   "keywords": [
     "whatsapp",
@@ -17,7 +17,7 @@
     "url": "https://github.com/shizo-devs/baileys.git"
   },
   "license": "MIT",
-  "author": "Adhiraj Singh",
+  "author": "Yugesh Singh",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
