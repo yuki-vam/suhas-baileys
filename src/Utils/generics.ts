@@ -5,7 +5,7 @@ import { platform, release } from 'os'
 import { ILogger } from './logger'
 import { proto } from '../../WAProto'
 import { version as baileysVersion } from '../Defaults/baileys-version.json'
-import { BaileysEventEmitter, BaileysEventMap, BrowsersMap, DisconnectReason, WACallUpdateType, WAVersion } from '../Types'
+import { BaileysEventEmitter, BaileysEventMap, BrowsersMap, ConnectionState, DisconnectReason, WACallUpdateType, WAVersion } from '../Types'
 import { BinaryNode, getAllBinaryNodeChildren, jidDecode } from '../WABinary'
 
 const COMPANION_PLATFORM_MAP = {
@@ -36,9 +36,9 @@ export const Browsers: BrowsersMap = {
 }
 
 export const getPlatformId = (browser: string) => {
-    const platformType = proto.DeviceProps.PlatformType[browser.toUpperCase()];
-    return platformType ? platformType.toString() : '49' // chrome
-};
+	const platformType = proto.DeviceProps.PlatformType[browser.toUpperCase()]
+	return platformType ? platformType.toString() : '49' //chrome
+}
 
 export const BufferJSON = {
 	replacer: (k, value: any) => {
@@ -60,7 +60,7 @@ export const BufferJSON = {
 
 export const getKeyAuthor = (
 	key: proto.IMessageKey | undefined | null,
-	meId: string = 'me'
+	meId = 'me'
 ) => (
 	(key?.fromMe ? meId : key?.participant || key?.remoteJid) || ''
 )
@@ -114,14 +114,14 @@ export const encodeBigEndian = (e: number, t = 4) => {
 	return a
 }
 
-export const toNumber = (t: Long | number | null | undefined): number => ((typeof t === 'object' && t) ? ('toNumber' in t ? t.toNumber() : (t as any).low) : t)
+export const toNumber = (t: Long | number | null | undefined): number => ((typeof t === 'object' && t) ? ('toNumber' in t ? t.toNumber() : (t as Long).low) : t || 0)
 
 /** unix timestamp of a date in seconds */
 export const unixTimestampSeconds = (date: Date = new Date()) => Math.floor(date.getTime() / 1000)
 
 export type DebouncedTimeout = ReturnType<typeof debouncedTimeout>
 
-export const debouncedTimeout = (intervalMs: number = 1000, task?: () => void) => {
+export const debouncedTimeout = (intervalMs = 1000, task?: () => void) => {
 	let timeout: NodeJS.Timeout | undefined
 	return {
 		start: (newIntervalMs?: number, newTask?: () => void) => {
@@ -194,36 +194,28 @@ export const generateMessageIDV2 = (userId?: string): string => {
 	const data = Buffer.alloc(8 + 20 + 16)
 	data.writeBigUInt64BE(BigInt(Math.floor(Date.now() / 1000)))
 
-	if (userId) {
+	if(userId) {
 		const id = jidDecode(userId)
-		if (id?.user) {
+		if(id?.user) {
 			data.write(id.user, 8)
 			data.write('@c.us', 8 + id.user.length)
 		}
 	}
 
-	const random = randomBytes(20)
+	const random = randomBytes(16)
 	random.copy(data, 28)
 
 	const hash = createHash('sha256').update(data).digest()
-	return '3L1T3' + hash.toString('hex').toUpperCase().substring(0, 16)
-}
-
-//Message ID function for Baileys Elite
-//This V3 is RollBack Update to old Message ID
-export const generateMessageIDV3 = (userId?: string): string => {
-   let swebfix = '3L1T3';
-     let swebRandom = randomBytes(5).toString('hex').toUpperCase().substring(0, 10);
-        return swebfix + swebRandom;
+	return '3L1T3' + hash.toString('hex').toUpperCase().substring(0, 18)
 }
 
 // generate a random ID to attach to a message
-export const generateMessageID = () => '3L1T3' + randomBytes(8).toString('hex').toUpperCase()
+export const generateMessageID = () => '3L1T3' + randomBytes(18).toString('hex').toUpperCase()
 
 export function bindWaitForEvent<T extends keyof BaileysEventMap>(ev: BaileysEventEmitter, event: T) {
 	return async(check: (u: BaileysEventMap[T]) => Promise<boolean | undefined>, timeoutMs?: number) => {
 		let listener: (item: BaileysEventMap[T]) => void
-		let closeListener: any
+		let closeListener: (state: Partial<ConnectionState>) => void
 		await (
 			promiseTimeout<void>(
 				timeoutMs,
@@ -444,7 +436,7 @@ export const isWABusinessPlatform = (platform: string) => {
 	return platform === 'smbi' || platform === 'smba'
 }
 
-export function trimUndefined(obj: any) {
+export function trimUndefined(obj: {[_: string]: any}) {
 	for(const key in obj) {
 		if(typeof obj[key] === 'undefined') {
 			delete obj[key]
@@ -461,8 +453,8 @@ export function bytesToCrockford(buffer: Buffer): string {
 	let bitCount = 0
 	const crockford: string[] = []
 
-	for(let i = 0; i < buffer.length; i++) {
-		value = (value << 8) | (buffer[i] & 0xff)
+	for(const element of buffer) {
+		value = (value << 8) | (element & 0xff)
 		bitCount += 8
 
 		while(bitCount >= 5) {
