@@ -52,6 +52,7 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 		logger,
 		retryRequestDelayMs,
 		maxMsgRetryCount,
+		ignoreMsgLoading,
 		getMessage,
 		shouldIgnoreJid
 	} = config
@@ -421,7 +422,7 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 
 			break
 		case 'membership_approval_mode':
-			const approvalMode = getBinaryNodeChild(child, 'group_join')
+			const approvalMode: any = getBinaryNodeChild(child, 'group_join')
 			if(approvalMode) {
 				msg.messageStubType = WAMessageStubType.GROUP_MEMBERSHIP_JOIN_APPROVAL_MODE
 				msg.messageStubParameters = [ approvalMode.attrs.state ]
@@ -701,7 +702,6 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 		ids: string[],
 		retryNode: BinaryNode
 	) => {
-		// todo: implement a cache to store the last 256 sent messages (copy whatsmeow)
 		const msgs = await Promise.all(ids.map(id => getMessage({ ...key, id })))
 		const remoteJid = key.remoteJid!
 		const participant = key.participant || remoteJid
@@ -717,7 +717,8 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 
 		logger.debug({ participant, sendToAll }, 'forced new session for retry recp')
 
-		for(const [i, msg] of msgs.entries()) {
+		for(let i = 0; i < msgs.length;i++) {
+			const msg = msgs[i]
 			if(msg) {
 				updateSendMessageAgainCount(ids[i], participant)
 				const msgRelayOpts: MessageRelayOptions = { messageId: ids[i] }
@@ -743,10 +744,7 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 		const isLid = attrs.from.includes('lid')
 		const isNodeFromMe = areJidsSameUser(attrs.participant || attrs.from, isLid ? authState.creds.me?.lid : authState.creds.me?.id)
 		const remoteJid = !isNodeFromMe || isJidGroup(attrs.from) ? attrs.from : attrs.recipient
-		const fromMe = !attrs.recipient || (
-			(attrs.type === 'retry' || attrs.type === 'sender') 
-			&& isNodeFromMe
-		)
+		const fromMe = !attrs.recipient || ((attrs.type === 'retry' || attrs.type === 'sender') && isNodeFromMe)
 
 		const key: proto.IMessageKey = {
 			remoteJid,
@@ -870,23 +868,19 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 	}
 
 	const handleMessage = async(node: BinaryNode) => {
+		if(ignoreMsgLoading && node.attrs.offline) {
+			logger.debug({ key: node.attrs.key }, 'ignored offline message')
+			await sendMessageAck(node)
+			return
+		}
 		if(shouldIgnoreJid(node.attrs.from) && node.attrs.from !== '@s.whatsapp.net') {
 			logger.debug({ key: node.attrs.key }, 'ignored message')
 			await sendMessageAck(node)
 			return
 		}
 
-		const encNode = getBinaryNodeChild(node, 'enc')
-
-		// TODO: temporary fix for crashes and issues resulting of failed msmsg decryption
-		if(encNode && encNode.attrs.type === 'msmsg') {
-		logger.debug({ key: node.attrs.key }, 'ignored msmsg')
-		await sendMessageAck(node)
-		return
-		}
-
 		let response: string | undefined
-		if(getBinaryNodeChild(node, 'unavailable') && !encNode) {
+		if(getBinaryNodeChild(node, 'unavailable') && !getBinaryNodeChild(node, 'enc')) {
 			await sendMessageAck(node)
 			const { key } = decodeMessageNode(node, authState.creds.me!.id, authState.creds.me!.lid || '').fullMessage
 			response = await requestPlaceholderResend(key)
@@ -912,8 +906,10 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 			msg.messageStubParameters = [NO_MESSAGE_FOUND_ERROR_TEXT, response]
 		}
 
-		if(msg.message?.protocolMessage?.type === proto.Message.ProtocolMessage.Type.SHARE_PHONE_NUMBER && node.attrs.sender_pn) {
-			ev.emit('chats.phoneNumberShare', { lid: node.attrs.from, jid: node.attrs.sender_pn })
+		if(msg.message?.protocolMessage?.type === proto.Message.ProtocolMessage.Type.SHARE_PHONE_NUMBER) {
+			if(node.attrs.sender_pn) {
+				ev.emit('chats.phoneNumberShare', { lid: node.attrs.from, jid: node.attrs.sender_pn })
+			}
 		}
 
 		try {
@@ -1003,7 +999,7 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 		}
 		return sendPeerDataOperationMessage(pdoMessage)
 	}
-	const requestPlaceholderResend = async(messageKey: WAMessageKey): Promise<string | undefined> => {
+	const requestPlaceholderResend = async(messageKey: WAMessageKey): Promise<'RESOLVED'| string | undefined> => {
 		if(!authState.creds.me?.id) {
 			throw new Boom('Not authenticated')
 		}

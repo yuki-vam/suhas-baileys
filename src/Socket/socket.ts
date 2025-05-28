@@ -8,6 +8,9 @@ import {
 	DEF_TAG_PREFIX,
 	INITIAL_PREKEY_COUNT,
 	MIN_PREKEY_COUNT,
+	MOBILE_ENDPOINT,
+	MOBILE_NOISE_HEADER,
+	MOBILE_PORT,
 	NOISE_WA_HEADER
 } from '../Defaults'
 import { DisconnectReason, SocketConfig } from '../Types'
@@ -21,6 +24,7 @@ import {
 	derivePairingCodeKey,
 	generateLoginNode,
 	generateMdTagPrefix,
+	generateMobileNode,
 	generateRegistrationNode,
 	getCodeFromWSError,
 	getErrorCodeFromStreamError,
@@ -41,7 +45,7 @@ import {
 	jidEncode,
 	S_WHATSAPP_NET
 } from '../WABinary'
-import { WebSocketClient } from './Client'
+import { MobileSocketClient, WebSocketClient } from './Client'
 
 /**
  * Connects to WA servers and performs:
@@ -65,17 +69,19 @@ export const makeSocket = (config: SocketConfig) => {
 		makeSignalRepository,
 	} = config
 
-	const url = typeof waWebSocketUrl === 'string' ? new URL(waWebSocketUrl) : waWebSocketUrl
+	let url = typeof waWebSocketUrl === 'string' ? new URL(waWebSocketUrl) : waWebSocketUrl
 
-	if(config.mobile || url.protocol === 'tcp:') {
-		throw new Boom('Mobile API is not supported anymore', { statusCode: DisconnectReason.loggedOut })
+	config.mobile = config.mobile || url.protocol === 'tcp:'
+
+	if(config.mobile && url.protocol !== 'tcp:') {
+		url = new URL(`tcp://${MOBILE_ENDPOINT}:${MOBILE_PORT}`)
 	}
 	
-	if(url.protocol === 'wss' && authState?.creds?.routingInfo) {
+	if(!config.mobile && url.protocol === 'wss' && authState?.creds?.routingInfo) {
 		url.searchParams.append('ED', authState.creds.routingInfo.toString('base64url'))
 	}	
 
-	const ws = new WebSocketClient(url, config)
+	const ws = config.socket ? config.socket : config.mobile ? new MobileSocketClient(url, config) : new WebSocketClient(url, config)
 
 	ws.connect()
 
@@ -85,7 +91,8 @@ export const makeSocket = (config: SocketConfig) => {
 	/** WA noise protocol wrapper */
 	const noise = makeNoiseHandler({
 		keyPair: ephemeralKeyPair,
-		NOISE_HEADER: NOISE_WA_HEADER,
+		NOISE_HEADER: config.mobile ? MOBILE_NOISE_HEADER : NOISE_WA_HEADER,
+		mobile: config.mobile,
 		logger,
 		routingInfo: authState?.creds?.routingInfo
 	})
@@ -183,7 +190,7 @@ export const makeSocket = (config: SocketConfig) => {
 		let onRecv: (json) => void
 		let onErr: (err) => void
 		try {
-			const result = await promiseTimeout<T>(timeoutMs,
+			return await promiseTimeout<T>(timeoutMs,
 				(resolve, reject) => {
 					onRecv = resolve
 					onErr = err => {
@@ -195,8 +202,6 @@ export const makeSocket = (config: SocketConfig) => {
 					ws.off('error', onErr)
 				},
 			)
-
-			return result as any
 		} finally {
 			ws.off(`TAG:${msgId}`, onRecv!)
 			ws.off('close', onErr!) // if the socket closes, you'll never receive the message
@@ -211,11 +216,11 @@ export const makeSocket = (config: SocketConfig) => {
 		}
 
 		const msgId = node.attrs.id
-		const [result] = await Promise.all([
-			waitForMessage(msgId, timeoutMs),
-			sendNode(node)
-		])
+		const wait = waitForMessage(msgId, timeoutMs)
 
+		await sendNode(node)
+
+		const result = await (wait as Promise<BinaryNode>)
 		if('tag' in result) {
 			assertNodeErrorFree(result)
 		}
@@ -242,7 +247,9 @@ export const makeSocket = (config: SocketConfig) => {
 		const keyEnc = await noise.processHandshake(handshake, creds.noiseKey)
 
 		let node: proto.IClientPayload
-		if(!creds.me) {
+		if(config.mobile) {
+			node = generateMobileNode(config)
+		} else if(!creds.me) {
 			node = generateRegistrationNode(creds, config)
 			logger.info({ node }, 'not logged in, attempting registration...')
 		} else {
@@ -328,11 +335,11 @@ export const makeSocket = (config: SocketConfig) => {
 				const l1 = frame.attrs || {}
 				const l2 = Array.isArray(frame.content) ? frame.content[0]?.tag : ''
 
-				for(const key of Object.keys(l1)) {
+				Object.keys(l1).forEach(key => {
 					anyTriggered = ws.emit(`${DEF_CALLBACK_PREFIX}${l0},${key}:${l1[key]},${l2}`, frame) || anyTriggered
 					anyTriggered = ws.emit(`${DEF_CALLBACK_PREFIX}${l0},${key}:${l1[key]}`, frame) || anyTriggered
 					anyTriggered = ws.emit(`${DEF_CALLBACK_PREFIX}${l0},${key}`, frame) || anyTriggered
-				}
+				})
 				anyTriggered = ws.emit(`${DEF_CALLBACK_PREFIX}${l0},,${l2}`, frame) || anyTriggered
 				anyTriggered = ws.emit(`${DEF_CALLBACK_PREFIX}${l0}`, frame) || anyTriggered
 

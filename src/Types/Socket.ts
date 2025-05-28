@@ -23,8 +23,6 @@ export type CacheStore = {
     flushAll(): void
 }
 
-export type PatchedMessageWithRecipientJID = proto.IMessage & {recipientJid?: string}
-
 export type SocketConfig = {
     /** the WS url to connect to WA */
     waWebSocketUrl: string | URL
@@ -34,9 +32,7 @@ export type SocketConfig = {
     defaultQueryTimeoutMs: number | undefined
     /** ping-pong interval for WS connection */
     keepAliveIntervalMs: number
-	/** should baileys use the mobile api instead of the multi device api
-	* @deprecated This feature has been removed
-    */
+	/** should baileys use the mobile api instead of the multi device api */
 	mobile?: boolean
     /** proxy agent */
     agent?: Agent
@@ -86,6 +82,8 @@ export type SocketConfig = {
     linkPreviewImageThumbnailWidth: number
     /** Should Baileys ask the phone for full history, will be received async */
     syncFullHistory: boolean
+    /** Ignore Message when offline, default is false */
+    ignoreMsgLoading: boolean
     /** Should baileys fire init queries automatically, default true */
     fireInitQueries: boolean
     /**
@@ -106,8 +104,8 @@ export type SocketConfig = {
      * */
     patchMessageBeforeSending: (
         msg: proto.IMessage,
-        recipientJids?: string[],
-     ) => Promise<PatchedMessageWithRecipientJID[] | PatchedMessageWithRecipientJID> | PatchedMessageWithRecipientJID[] | PatchedMessageWithRecipientJID
+        recipientJids: string[],
+    ) => Promise<proto.IMessage> | proto.IMessage
 
     /** verify app state MACs */
     appStateMacVerification: {
@@ -128,4 +126,7 @@ export type SocketConfig = {
     cachedGroupMetadata: (jid: string) => Promise<GroupMetadata | undefined>
 
     makeSignalRepository: (auth: SignalAuthState) => SignalRepository
+
+    /** Socket passthrough */
+    socket?: any
 }

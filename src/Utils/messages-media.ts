@@ -12,10 +12,10 @@ import { Readable, Transform } from 'stream'
 import { URL } from 'url'
 import { proto } from '../../WAProto'
 import { DEFAULT_ORIGIN, MEDIA_HKDF_KEY_MAPPING, MEDIA_PATH_MAP } from '../Defaults'
-import { BaileysEventMap, DownloadableMessage, MediaConnInfo, MediaDecryptionKeyInfo, MediaType, MessageType, SocketConfig, WAGenericMediaMessage, WAMediaPayloadURL, WAMediaUpload, WAMediaUploadFunction, WAMessageContent } from '../Types'
+import { BaileysEventMap, DownloadableMessage, MediaConnInfo, MediaDecryptionKeyInfo, MediaType, MessageType, SocketConfig, WAGenericMediaMessage, WAMediaUpload, WAMediaUploadFunction, WAMessageContent } from '../Types'
 import { BinaryNode, getBinaryNodeChild, getBinaryNodeChildBuffer, jidNormalizedUser } from '../WABinary'
 import { aesDecryptGCM, aesEncryptGCM, hkdf } from './crypto'
-import { generateMessageIDV2 } from './generics'
+import { generateMessageID } from './generics'
 import { ILogger } from './logger'
 
 const getTmpFilesDirectory = () => tmpdir()
@@ -115,7 +115,7 @@ export const extractImageThumb = async(bufferOrFilePath: Readable | Buffer | str
 	} else if('jimp' in lib && typeof lib.jimp?.read === 'function') {
 		const { read, MIME_JPEG, RESIZE_BILINEAR, AUTO } = lib.jimp
 
-		const jimp = await read(bufferOrFilePath as string)
+		const jimp = await read(bufferOrFilePath as any)
 		const dimensions = {
 			width: jimp.getWidth(),
 			height: jimp.getHeight()
@@ -292,7 +292,7 @@ export async function generateThumbnail(
 			}
 		}
 	} else if(mediaType === 'video') {
-		const imgFilename = join(getTmpFilesDirectory(), generateMessageIDV2() + '.jpg')
+		const imgFilename = join(getTmpFilesDirectory(), generateMessageID() + '.jpg')
 		try {
 			await extractVideoThumb(file, imgFilename, '00:00:00', { width: 32, height: 32 })
 			const buff = await fs.readFile(imgFilename)
@@ -338,7 +338,7 @@ export const prepareStream = async(
 		if(type === 'file') {
 			bodyPath = (media as any).url
 		} else if(saveOriginalFileIfRequired) {
-			bodyPath = join(getTmpFilesDirectory(), mediaType + generateMessageIDV2())
+			bodyPath = join(getTmpFilesDirectory(), mediaType + generateMessageID())
 			writeFileSync(bodyPath, buffer)
 			didSaveToTmpPath = true
 		}
@@ -391,9 +391,9 @@ export const encryptedStream = async(
 	let writeStream: WriteStream | undefined
 	let didSaveToTmpPath = false
 	if(type === 'file') {
-		bodyPath = (media as WAMediaPayloadURL).url.toString()
+		bodyPath = (media as any).url
 	} else if(saveOriginalFileIfRequired) {
-		bodyPath = join(getTmpFilesDirectory(), mediaType + generateMessageIDV2())
+		bodyPath = join(getTmpFilesDirectory(), mediaType + generateMessageID())
 		writeStream = createWriteStream(bodyPath)
 		didSaveToTmpPath = true
 	}
@@ -422,8 +422,10 @@ export const encryptedStream = async(
 			}
 
 			sha256Plain = sha256Plain.update(data)
-			if(writeStream && !writeStream.write(data)) {
-				await once(writeStream, 'drain')
+			if(writeStream) {
+				if(!writeStream.write(data)) {
+					await once(writeStream, 'drain')
+				}
 			}
 
 			onChunk(aes.update(data))
