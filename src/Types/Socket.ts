@@ -23,6 +23,8 @@ export type CacheStore = {
     flushAll(): void
 }
 
+export type PatchedMessageWithRecipientJID = proto.IMessage & {recipientJid?: string}
+
 export type SocketConfig = {
     /** the WS url to connect to WA */
     waWebSocketUrl: string | URL
@@ -82,8 +84,6 @@ export type SocketConfig = {
     linkPreviewImageThumbnailWidth: number
     /** Should Baileys ask the phone for full history, will be received async */
     syncFullHistory: boolean
-    /** Ignore Message when offline, default is false */
-    ignoreMsgLoading: boolean
     /** Should baileys fire init queries automatically, default true */
     fireInitQueries: boolean
     /**
@@ -104,8 +104,8 @@ export type SocketConfig = {
      * */
     patchMessageBeforeSending: (
         msg: proto.IMessage,
-        recipientJids: string[],
-    ) => Promise<proto.IMessage> | proto.IMessage
+        recipientJids?: string[],
+     ) => Promise<PatchedMessageWithRecipientJID[] | PatchedMessageWithRecipientJID> | PatchedMessageWithRecipientJID[] | PatchedMessageWithRecipientJID
 
     /** verify app state MACs */
     appStateMacVerification: {
