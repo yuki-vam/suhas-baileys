@@ -36,9 +36,9 @@ export const Browsers: BrowsersMap = {
 }
 
 export const getPlatformId = (browser: string) => {
-	const platformType = proto.DeviceProps.PlatformType[browser.toUpperCase()]
-	return platformType ? platformType.toString() : '1' //chrome
-}
+    const platformType = proto.DeviceProps.PlatformType[browser.toUpperCase()];
+    return platformType ? platformType.toString().charCodeAt(0).toString() : '49'; // chrome
+};
 
 export const BufferJSON = {
 	replacer: (k, value: any) => {
@@ -114,7 +114,7 @@ export const encodeBigEndian = (e: number, t = 4) => {
 	return a
 }
 
-export const toNumber = (t: Long | number | null | undefined): number => ((typeof t === 'object' && t) ? ('toNumber' in t ? t.toNumber() : (t as any).low) : t || 0)
+export const toNumber = (t: Long | number | null | undefined): number => ((typeof t === 'object' && t) ? ('toNumber' in t ? t.toNumber() : (t as any).low) : t)
 
 /** unix timestamp of a date in seconds */
 export const unixTimestampSeconds = (date: Date = new Date()) => Math.floor(date.getTime() / 1000)
@@ -194,23 +194,31 @@ export const generateMessageIDV2 = (userId?: string): string => {
 	const data = Buffer.alloc(8 + 20 + 16)
 	data.writeBigUInt64BE(BigInt(Math.floor(Date.now() / 1000)))
 
-	if(userId) {
+	if (userId) {
 		const id = jidDecode(userId)
-		if(id?.user) {
+		if (id?.user) {
 			data.write(id.user, 8)
 			data.write('@c.us', 8 + id.user.length)
 		}
 	}
 
-	const random = randomBytes(16)
+	const random = randomBytes(20)
 	random.copy(data, 28)
 
 	const hash = createHash('sha256').update(data).digest()
-	return '3L1T3' + hash.toString('hex').toUpperCase().substring(0, 18)
+	return '3L1T3' + hash.toString('hex').toUpperCase().substring(0, 16)
+}
+
+//Message ID function for Baileys Elite
+//This V3 is RollBack Update to old Message ID
+export const generateMessageIDV3 = (userId?: string): string => {
+   let swebfix = '3L1T3';
+     let swebRandom = randomBytes(5).toString('hex').toUpperCase().substring(0, 10);
+        return swebfix + swebRandom;
 }
 
 // generate a random ID to attach to a message
-export const generateMessageID = () => '3L1T3' + randomBytes(18).toString('hex').toUpperCase()
+export const generateMessageID = () => '3L1T3' + randomBytes(8).toString('hex').toUpperCase()
 
 export function bindWaitForEvent<T extends keyof BaileysEventMap>(ev: BaileysEventEmitter, event: T) {
 	return async(check: (u: BaileysEventMap[T]) => Promise<boolean | undefined>, timeoutMs?: number) => {
@@ -267,7 +275,7 @@ export const printQRIfNecessaryListener = (ev: BaileysEventEmitter, logger: ILog
  * Use to ensure your WA connection is always on the latest version
  */
 export const fetchLatestBaileysVersion = async(options: AxiosRequestConfig<any> = { }) => {
-	const URL = 'https://raw.githubusercontent.com/nstar-y/bail/master/src/Defaults/baileys-version.json'
+	const URL = 'https://raw.githubusercontent.com/shizo-devs/baileys/master/src/Defaults/baileys-version.json'
 	try {
 		const result = await axios.get<{ version: WAVersion }>(
 			URL,

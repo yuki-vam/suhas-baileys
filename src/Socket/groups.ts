@@ -1,6 +1,6 @@
 import { proto } from '../../WAProto'
 import { GroupMetadata, GroupParticipant, ParticipantAction, SocketConfig, WAMessageKey, WAMessageStubType } from '../Types'
-import { generateMessageIDV2, unixTimestampSeconds } from '../Utils'
+import { generateMessageID, generateMessageIDV2, unixTimestampSeconds } from '../Utils'
 import { BinaryNode, getBinaryNodeChild, getBinaryNodeChildren, getBinaryNodeChildString, jidEncode, jidNormalizedUser } from '../WABinary'
 import { makeChatsSocket } from './chats'
 
@@ -82,7 +82,7 @@ export const makeGroupsSocket = (config: SocketConfig) => {
 		...sock,
 		groupMetadata,
 		groupCreate: async(subject: string, participants: string[]) => {
-			const key = generateMessageIDV2()
+			const key = generateMessageID()
 			const result = await groupQuery(
 				'@g.us',
 				'set',
@@ -207,7 +207,7 @@ export const makeGroupsSocket = (config: SocketConfig) => {
 					{
 						tag: 'description',
 						attrs: {
-							...(description ? { id: generateMessageIDV2() } : { delete: 'true' }),
+							...(description ? { id: generateMessageID() } : { delete: 'true' }),
 							...(prev ? { prev } : {})
 						},
 						content: description ? [
@@ -327,15 +327,9 @@ export const extractGroupMetadata = (result: BinaryNode) => {
 	const descChild = getBinaryNodeChild(group, 'description')
 	let desc: string | undefined
 	let descId: string | undefined
-	let descOwner: string | undefined
-	let descOwnerPhoneNumber: string | undefined
-	let descTime: number | undefined
 	if(descChild) {
 		desc = getBinaryNodeChildString(descChild, 'body')
-		descOwner = descChild.attrs.participant
-		descOwnerPhoneNumber = descChild.attrs.participant_pn
 		descId = descChild.attrs.id
-		descTime = +descChild.attrs.t
 	}
 
 	const groupSize = group.attrs.size ? Number(group.attrs.size) : undefined
@@ -344,19 +338,14 @@ export const extractGroupMetadata = (result: BinaryNode) => {
 	const memberAddMode = getBinaryNodeChildString(group, 'member_add_mode') === 'all_member_add'
 	const metadata: GroupMetadata = {
 		id: groupId,
-		addressingMode: group.attrs.addressing_mode as "pn" | "lid",
 		subject: group.attrs.subject,
 		subjectOwner: group.attrs.s_o,
-		subjectOwnerPhoneNumber: group.attrs.s_o_pn,
 		subjectTime: +group.attrs.s_t,
 		size: groupSize || getBinaryNodeChildren(group, 'participant').length,
 		creation: +group.attrs.creation,
 		owner: group.attrs.creator ? jidNormalizedUser(group.attrs.creator) : undefined,
 		desc,
 		descId,
-		descOwner,
-		descOwnerPhoneNumber,
-		descTime,
 		linkedParent: getBinaryNodeChild(group, 'linked_parent')?.attrs.jid || undefined,
 		restrict: !!getBinaryNodeChild(group, 'locked'),
 		announce: !!getBinaryNodeChild(group, 'announcement'),
@@ -368,7 +357,6 @@ export const extractGroupMetadata = (result: BinaryNode) => {
 			({ attrs }) => {
 				return {
 					id: attrs.jid,
-					phoneNumber: attrs.phone_number || attrs.jid,
 					admin: (attrs.type || null) as GroupParticipant['admin'],
 				}
 			}
