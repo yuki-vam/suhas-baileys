@@ -56,54 +56,54 @@ export const makeNewsletterSocket = (config: SocketConfig) => {
     )
 
     const parseFetchedUpdates = async(node: BinaryNode, type: 'messages' | 'updates') => {
-        let child 
-        
-        if(type === 'messages') child = getBinaryNodeChild(node, 'messages')
-        else {
-            const parent = getBinaryNodeChild(node, 'message_updates')
-            child = getBinaryNodeChild(parent, 'messages')
-        }
-
-        return await Promise.all(getAllBinaryNodeChildren(child!).map(async messageNode => {
-            messageNode.attrs.from = child?.attrs.jid as string
-
-            const views = getBinaryNodeChild(messageNode, 'views_count')?.attrs?.count
-            const reactionNode = getBinaryNodeChild(messageNode, 'reactions')
-            const reactions = getBinaryNodeChildren(reactionNode, 'reaction')
-                .map(({ attrs }) => ({ count: +attrs.count, code: attrs.code } as NewsletterReaction))
-
-            let data: NewsletterFetchedUpdate
-            if(type === 'messages') {
-                const { fullMessage: message, decrypt } = await decryptMessageNode(
-                    messageNode,
-                    authState.creds.me!.id,
-                    authState.creds.me!.lid || '',
-                    signalRepository,
-                    config.logger
-                )
+    let child 
     
-                await decrypt()
-    
-                data = {
-                    server_id: messageNode.attrs.server_id,
-                    views: views ? +views : undefined,
-                    reactions,
-                    message
-                }
-    
-                return data
-            } else {
-                data = {
-                    server_id: messageNode.attrs.server_id,
-                    views: views ? +views : undefined,
-                    reactions
-                }
+    if(type === 'messages') child = getBinaryNodeChild(node, 'messages')
+    else {
+        const parent = getBinaryNodeChild(node, 'message_updates')
+        child = getBinaryNodeChild(parent, 'messages')
+    }
 
-                return data
+    return await Promise.all(getAllBinaryNodeChildren(child!).map(async messageNode => {
+        messageNode.attrs.from = child?.attrs.jid as string
+
+        const views = getBinaryNodeChild(messageNode, 'views_count')?.attrs?.count
+        const reactionNode = getBinaryNodeChild(messageNode, 'reactions')
+        const reactions = getBinaryNodeChildren(reactionNode, 'reaction')
+            .map(({ attrs }) => ({ count: +attrs.count, code: attrs.code } as NewsletterReaction))
+
+        let data: NewsletterFetchedUpdate
+        if(type === 'messages') {
+            const { fullMessage: message, decrypt } = await decryptMessageNode(
+                messageNode,
+                authState.creds.me!.id,
+                authState.creds.me!.lid || '',
+                signalRepository,
+                config.logger,
+                {} // Added the missing 6th parameter
+            )
+
+            await decrypt()
+
+            data = {
+                server_id: messageNode.attrs.server_id,
+                views: views ? +views : undefined,
+                reactions,
+                message
             }
 
-        }))
-    }
+            return data
+        } else {
+            data = {
+                server_id: messageNode.attrs.server_id,
+                views: views ? +views : undefined,
+                reactions
+            }
+
+            return data
+        }
+    }))
+}
 
     return {
         ...sock,
