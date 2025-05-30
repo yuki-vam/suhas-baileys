@@ -18,6 +18,7 @@ enum QueryIds {
 }
 
 export const makeNewsletterSocket = (config: SocketConfig) => {
+    const { getMessage } = config
 	const sock = makeGroupsSocket(config)
 	const { authState, signalRepository, query, generateMessageTag } = sock
 
@@ -79,7 +80,8 @@ export const makeNewsletterSocket = (config: SocketConfig) => {
                     authState.creds.me!.id,
                     authState.creds.me!.lid || '',
                     signalRepository,
-                    config.logger
+                    config.logger,
+                    getMessage
                 )
     
                 await decrypt()

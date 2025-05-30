@@ -37,6 +37,7 @@ import {
 	getBinaryNodeChild,
 	getBinaryNodeChildBuffer,
 	getBinaryNodeChildren,
+	getBotJid,
 	isJidGroup, isJidStatusBroadcast,
 	isJidUser,
 	jidDecode,
@@ -272,7 +273,8 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 				}
 
 				if(node.attrs.recipient) {
-					receipt.attrs.recipient = node.attrs.recipient
+					//Fixes problem with retry that is never done when it is @bot
+					receipt.attrs.recipient = getBotJid(node.attrs.recipient);
 				}
 
 				if(node.attrs.participant) {
@@ -912,6 +914,7 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 			authState.creds.me!.lid || '',
 			signalRepository,
 			logger,
+			getMessage,
 		)
 
 		if(response && msg?.messageStubParameters?.[0] === NO_MESSAGE_FOUND_ERROR_TEXT) {
