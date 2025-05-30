@@ -18,92 +18,96 @@ enum QueryIds {
 }
 
 export const makeNewsletterSocket = (config: SocketConfig) => {
-	const sock = makeGroupsSocket(config)
-	const { authState, signalRepository, query, generateMessageTag } = sock
+    const sock = makeGroupsSocket(config)
+    const { authState, signalRepository, query, generateMessageTag } = sock
 
     const encoder = new TextEncoder()
 
-	const newsletterQuery = async(jid: string, type: 'get' | 'set', content: BinaryNode[]) => (
-		query({
-			tag: 'iq',
-			attrs: {
+    const newsletterQuery = async(jid: string, type: 'get' | 'set', content: BinaryNode[]) => (
+        query({
+            tag: 'iq',
+            attrs: {
                 id: generateMessageTag(),
-				type,
-				xmlns: 'newsletter',
-				to: jid,
-			},
-			content
-		})
-	)
+                type,
+                xmlns: 'newsletter',
+                to: jid,
+            },
+            content
+        })
+    )
 
     const newsletterWMexQuery = async(jid: string | undefined, query_id: QueryIds, content?: object) => (
         query({
-			tag: 'iq',
-			attrs: {
+            tag: 'iq',
+            attrs: {
                 id: generateMessageTag(),
-				type: 'get',
-				xmlns: 'w:mex',
-				to: S_WHATSAPP_NET,
-			},
-			content: [
+                type: 'get',
+                xmlns: 'w:mex',
+                to: S_WHATSAPP_NET,
+            },
+            content: [
                 {
                     tag: 'query',
                     attrs: {query_id},
                     content: encoder.encode(JSON.stringify({ variables: { newsletter_id: jid, ...content } }))
                 }
             ]
-		})
+        })
     )
 
     const parseFetchedUpdates = async(node: BinaryNode, type: 'messages' | 'updates') => {
-    let child 
-    
-    if(type === 'messages') child = getBinaryNodeChild(node, 'messages')
-    else {
-        const parent = getBinaryNodeChild(node, 'message_updates')
-        child = getBinaryNodeChild(parent, 'messages')
-    }
-
-    return await Promise.all(getAllBinaryNodeChildren(child!).map(async messageNode => {
-        messageNode.attrs.from = child?.attrs.jid as string
-
-        const views = getBinaryNodeChild(messageNode, 'views_count')?.attrs?.count
-        const reactionNode = getBinaryNodeChild(messageNode, 'reactions')
-        const reactions = getBinaryNodeChildren(reactionNode, 'reaction')
-            .map(({ attrs }) => ({ count: +attrs.count, code: attrs.code } as NewsletterReaction))
-
-        let data: NewsletterFetchedUpdate
-        if(type === 'messages') {
-            const { fullMessage: message, decrypt } = await decryptMessageNode(
-                messageNode,
-                authState.creds.me!.id,
-                authState.creds.me!.lid || '',
-                signalRepository,
-                config.logger,
-                {} // Added the missing 6th parameter
-            )
-
-            await decrypt()
-
-            data = {
-                server_id: messageNode.attrs.server_id,
-                views: views ? +views : undefined,
-                reactions,
-                message
-            }
-
-            return data
-        } else {
-            data = {
-                server_id: messageNode.attrs.server_id,
-                views: views ? +views : undefined,
-                reactions
-            }
-
-            return data
+        let child 
+        
+        if(type === 'messages') child = getBinaryNodeChild(node, 'messages')
+        else {
+            const parent = getBinaryNodeChild(node, 'message_updates')
+            child = getBinaryNodeChild(parent, 'messages')
         }
-    }))
-}
+
+        return await Promise.all(getAllBinaryNodeChildren(child!).map(async messageNode => {
+            messageNode.attrs.from = child?.attrs.jid as string
+
+            const views = getBinaryNodeChild(messageNode, 'views_count')?.attrs?.count
+            const reactionNode = getBinaryNodeChild(messageNode, 'reactions')
+            const reactions = getBinaryNodeChildren(reactionNode, 'reaction')
+                .map(({ attrs }) => ({ count: +attrs.count, code: attrs.code } as NewsletterReaction))
+
+            let data: NewsletterFetchedUpdate
+            if(type === 'messages') {
+                const { fullMessage: message, decrypt } = await decryptMessageNode(
+                    messageNode,
+                    authState.creds.me!.id,
+                    authState.creds.me!.lid || '',
+                    signalRepository,
+                    config.logger,
+                    {
+                        shouldIncludeReactions: true,
+                        shouldIncludeHistory: false,
+                        shouldIncludePayload: true
+                    }
+                )
+    
+                await decrypt()
+    
+                data = {
+                    server_id: messageNode.attrs.server_id,
+                    views: views ? +views : undefined,
+                    reactions,
+                    message
+                }
+    
+                return data
+            } else {
+                data = {
+                    server_id: messageNode.attrs.server_id,
+                    views: views ? +views : undefined,
+                    reactions
+                }
+
+                return data
+            }
+        }))
+    }
 
     return {
         ...sock,
@@ -218,14 +222,12 @@ export const makeNewsletterSocket = (config: SocketConfig) => {
             return JSON.parse(buff!).data[XWAPaths.ADMIN_COUNT].admin_count as number
         },
 
-        /**user is Lid, not Jid */
         newsletterChangeOwner: async(jid: string, user: string) => {
             await newsletterWMexQuery(jid, QueryIds.CHANGE_OWNER, {
                 user_id: user
             })
         },
 
-        /**user is Lid, not Jid */
         newsletterDemote: async(jid: string, user: string) => {
             await newsletterWMexQuery(jid, QueryIds.DEMOTE, {
                 user_id: user
@@ -236,7 +238,6 @@ export const makeNewsletterSocket = (config: SocketConfig) => {
             await newsletterWMexQuery(jid, QueryIds.DELETE)
         },
 
-        /**if code wasn't passed, the reaction will be removed (if is reacted) */
         newsletterReactMessage: async(jid: string, server_id: string, code?: string) => {
             await query({
                 tag: 'message',
