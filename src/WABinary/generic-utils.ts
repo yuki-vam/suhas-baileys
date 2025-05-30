@@ -1,6 +1,6 @@
 import { Boom } from '@hapi/boom'
 import { proto } from '../../WAProto'
-import { BinaryNode } from './Types'
+import { BinaryNode } from './WABinary'
 
 // some extra useful utilities
 
