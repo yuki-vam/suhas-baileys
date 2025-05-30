@@ -2,12 +2,22 @@ import { Boom } from '@hapi/boom'
 import { proto } from '../../WAProto'
 import { ILogger } from './logger'
 import { SignalRepository, WAMessageKey } from '../Types'
-import { areJidsSameUser, BinaryNode, isJidBroadcast, isJidGroup, isJidMetaIa, isJidNewsletter, isJidStatusBroadcast, isJidUser, isLidUser } from '../WABinary'
+import { areJidsSameUser, BinaryNode, isJidBroadcast, isJidGroup, isJidMetaAI, isJidNewsletter, isJidStatusBroadcast, isJidUser, isLidUser } from '../WABinary'
 import { unpadRandomMax16 } from './generics'
+import { createDecipheriv } from 'crypto'
+import hkdf from 'futoin-hkdf'
 
 export const NO_MESSAGE_FOUND_ERROR_TEXT = 'Message absent from node'
-
 export const MISSING_KEYS_ERROR_TEXT = 'Key used already or never filled'
+
+const BOT_MESSAGE_CONSTANT = "Bot Message"
+const KEY_LENGTH = 32
+
+interface MessageKey {
+	targetId: string | null;
+	participant: string;
+	meId: string;
+}
 
 export const NACK_REASONS = {
 	ParsingError: 487,
@@ -26,6 +36,137 @@ export const NACK_REASONS = {
 }
 
 type MessageType = 'chat' | 'peer_broadcast' | 'other_broadcast' | 'group' | 'direct_peer_status' | 'other_status' | 'newsletter'
+
+const deriveMessageSecret = async (messageSecret: Buffer | Uint8Array): Promise<Buffer> => {
+	// Always convert to Buffer to ensure compatibility
+	const secretBuffer = Buffer.isBuffer(messageSecret)
+		? messageSecret
+		: Buffer.from(messageSecret.buffer, messageSecret.byteOffset, messageSecret.length);
+
+	return await hkdf(
+		secretBuffer,
+		KEY_LENGTH,
+		{ salt: undefined, info: BOT_MESSAGE_CONSTANT, hash: "SHA-256" }
+	);
+};
+
+const buildDecryptionKey = async (
+	messageID: string,
+	botJID: string,
+	targetJID: string,
+	messageSecret: Buffer | Uint8Array
+): Promise<Buffer> => {
+	const derivedSecret = await deriveMessageSecret(messageSecret);
+	const useCaseSecret = Buffer.concat([
+		Buffer.from(messageID),
+		Buffer.from(targetJID),
+		Buffer.from(botJID),
+		Buffer.from("")
+	]);
+	return await hkdf(
+		derivedSecret,
+		KEY_LENGTH,
+		{ salt: undefined, info: useCaseSecret, hash: "SHA-256" }
+	);
+};
+
+const decryptBotMessage = async (
+	encPayload: Buffer | Uint8Array,
+	encIv: Buffer | Uint8Array,
+	messageID: string,
+	botJID: string,
+	decryptionKey: Buffer | Uint8Array
+): Promise<Buffer> => {
+	encPayload = Buffer.isBuffer(encPayload) ? encPayload : Buffer.from(encPayload);
+	encIv = Buffer.isBuffer(encIv) ? encIv : Buffer.from(encIv);
+	decryptionKey = Buffer.isBuffer(decryptionKey) ? decryptionKey : Buffer.from(decryptionKey);
+
+	if (encIv.length !== 12) {
+		throw new Error(`IV size incorrect: expected 12, got ${encIv.length}`);
+	}
+
+	const authTag = encPayload.slice(-16);
+	const encryptedData = encPayload.slice(0, -16);
+
+	if (encryptedData.length < 16) {
+		throw new Error(`Encrypted data too short: ${encryptedData.length} bytes`);
+	}
+
+	const aad = Buffer.concat([
+		Buffer.from(messageID),
+		Buffer.from([0]),
+		Buffer.from(botJID)
+	]);
+
+	try {
+		const decipher = createDecipheriv("aes-256-gcm", decryptionKey, encIv);
+		decipher.setAAD(aad);
+		decipher.setAuthTag(authTag);
+		const decrypted = Buffer.concat([
+			decipher.update(encryptedData),
+			decipher.final()
+		]);
+
+		return decrypted;
+
+	} catch (error) {
+		console.error("Decrypt - Failed with:", (error as Error).message);
+		throw error;
+	}
+};
+
+const decryptMsmsgBotMessage = async (
+	messageSecret: Buffer | Uint8Array,
+	messageKey: MessageKey,
+	msMsg: proto.IMessageSecretMessage,
+): Promise<Buffer> => {
+	try {
+		const { targetId, participant: botJID, meId: targetJID } = messageKey;
+
+		if (!targetId || !botJID || !targetJID || !messageSecret) {
+			throw new Error("Missing required components for decryption");
+		}
+
+		const decryptionKey = await buildDecryptionKey(
+			targetId,
+			botJID,
+			targetJID,
+			messageSecret
+		);
+
+		if (!msMsg.encPayload) {
+			throw new Error('Missing encPayload');
+		}
+
+		if (!msMsg.encIv) {
+			throw new Error('Missing encIv');
+		}
+
+		return await decryptBotMessage(
+			msMsg.encPayload,
+			msMsg.encIv,
+			targetId,
+			botJID,
+			decryptionKey
+		);
+	} catch (error) {
+		console.error("Failed to decrypt bot message:", error);
+		throw error;
+	}
+};
+
+const decryptBotMsg = async (
+	content: Buffer | Uint8Array,
+	{ messageKey, messageSecret }: { messageKey: MessageKey; messageSecret: Buffer | Uint8Array }
+): Promise<Buffer> => {
+	try {
+		const msMsg = proto.MessageSecretMessage.decode(content);
+		return await decryptMsmsgBotMessage(messageSecret, messageKey, msMsg);
+	} catch (error) {
+		console.error("Error in decryptBotMsg:", error);
+		throw error;
+	}
+};
 
 /**
  * Decode the received node as a message.
@@ -48,8 +189,8 @@ export function decodeMessageNode(
 	const isMe = (jid: string) => areJidsSameUser(jid, meId)
 	const isMeLid = (jid: string) => areJidsSameUser(jid, meLid)
 
-	if(isJidUser(from) || isLidUser(from)) {
-		if (recipient && !isJidMetaIa(recipient)) {
+	if(isJidMetaAI(from) || isJidUser(from) || isLidUser(from)) {
+		if (recipient && !isJidMetaAI(recipient)) {
 			if(!isMe(from) && !isMeLid(from)) {
 				throw new Boom('receipient present, but msg not from me', { data: stanza })
 			}
@@ -124,23 +265,49 @@ export function decodeMessageNode(
 	}
 }
 
+type GetMessage = (key: WAMessageKey) => Promise<proto.IMessage | undefined>;
+
 export const decryptMessageNode = (
 	stanza: BinaryNode,
 	meId: string,
 	meLid: string,
 	repository: SignalRepository,
-	logger: ILogger
+	logger: ILogger,
+	getMessage: GetMessage
 ) => {
 	const { fullMessage, author, sender } = decodeMessageNode(stanza, meId, meLid)
+	let metaTargetId: string | null = null
+	let botEditTargetId: string | null = null
+	let botType: string | null = null
 	return {
 		fullMessage,
 		category: stanza.attrs.category,
 		author,
 		async decrypt() {
 			let decryptables = 0
-			if(Array.isArray(stanza.content)) {
-				for(const { tag, attrs, content } of stanza.content) {
-					if(tag === 'verified_name' && content instanceof Uint8Array) {
+			if (Array.isArray(stanza.content)) {
+				let hasMsmsg = false;
+				for (const { attrs } of stanza.content) {
+					if (attrs?.type === 'msmsg') {
+						hasMsmsg = true;
+						break;
+					}
+				}
+				if (hasMsmsg) {
+					for (const { tag, attrs } of stanza.content) {
+						if (tag === 'meta' && attrs?.target_id) {
+							metaTargetId = attrs.target_id;
+						}
+						if (tag === 'bot' && attrs?.edit_target_id) {
+							botEditTargetId = attrs.edit_target_id;
+						}
+						if (tag === 'bot' && attrs?.edit) {
+							botType = attrs.edit;
+						}
+					}
+				}
+				for (const { tag, attrs, content } of stanza.content) {
+					if (tag === 'verified_name' && content instanceof Uint8Array) {
 						const cert = proto.VerifiedNameCertificate.decode(content)
 						const details = proto.VerifiedNameCertificate.Details.decode(cert.details!)
 						fullMessage.verifiedBizName = details.verifiedName
@@ -162,35 +329,58 @@ export const decryptMessageNode = (
 						const e2eType = tag === 'plaintext' ? 'plaintext' : attrs.type
 						switch (e2eType) {
 						case 'skmsg':
-							msgBuffer = await repository.decryptGroupMessage({
-								group: sender,
-								authorJid: author,
-								msg: content
-							})
-							break
-						case 'pkmsg':
-						case 'msg':
-							const user = isJidUser(sender) ? sender : author
-							msgBuffer = await repository.decryptMessage({
-								jid: user,
-								type: e2eType,
-								ciphertext: content
-							})
-							break
-						case 'plaintext':
-							msgBuffer = content
-							break
-						case undefined:
-							msgBuffer = content
-							break
-						default:
-							throw new Error(`Unknown e2e type: ${e2eType}`)
-						}
+								msgBuffer = await repository.decryptGroupMessage({
+									group: sender,
+									authorJid: author,
+									msg: content
+								})
+								break
+							case 'pkmsg':
+							case 'msg':
+								const user = isJidUser(sender) ? sender : author
+								msgBuffer = await repository.decryptMessage({
+									jid: user,
+									type: e2eType,
+									ciphertext: content
+								})
+								break
+							case 'msmsg': //Message Secret Message
+								let msgRequestkey = {
+									remoteJid: stanza.attrs.from,
+									id: metaTargetId
+								}
+								const message = await getMessage(msgRequestkey);
+								const messageSecret = message?.messageContextInfo?.messageSecret
+								if (!messageSecret) {
+									throw new Error('Message secret not found');
+								}
+								//Only decrypts when it is the complete message
+								if (botType == 'last') {
+									const newkey: MessageKey = {
+										participant: stanza.attrs.from,
+										meId: stanza.attrs.from.endsWith(`@bot`) ?
+											`${meLid.split(`:`)[0]}@lid` :
+											`${meId.split(`:`)[0]}@s.whatsapp.net`,
+										targetId: botEditTargetId
+									};
 
-						let msg: proto.IMessage = proto.Message.decode(e2eType !== 'plaintext' ? unpadRandomMax16(msgBuffer) : msgBuffer)
-						msg = msg?.deviceSentMessage?.message || msg
+									msgBuffer = await decryptBotMsg(content, {
+										messageKey: newkey,
+										messageSecret
+									});
+								} else return;
+								break;
+							case 'plaintext':
+								msgBuffer = content
+								break
+							default:
+								throw new Error(`Unknown e2e type: ${e2eType}`)
+								}
 
-						if(msg.senderKeyDistributionMessage) {
+						let msg: proto.IMessage = proto.Message.decode(e2eType !== 'plaintext' && !hasMsmsg ? unpadRandomMax16(msgBuffer) : msgBuffer)
+						//It's necessary to save the messageContextInfo in the store to decrypt messages from bots
+						msg = msg.deviceSentMessage?.message ? { ...msg.deviceSentMessage.message, messageContextInfo: msg.messageContextInfo } : msg;
+						if (msg.senderKeyDistributionMessage) {
 							try {
 								await repository.processSenderKeyDistributionMessage({
 									authorJid: author,
