@@ -18,41 +18,41 @@ enum QueryIds {
 }
 
 export const makeNewsletterSocket = (config: SocketConfig) => {
-    const sock = makeGroupsSocket(config)
-    const { authState, signalRepository, query, generateMessageTag } = sock
+	const sock = makeGroupsSocket(config)
+	const { authState, signalRepository, query, generateMessageTag } = sock
 
     const encoder = new TextEncoder()
 
-    const newsletterQuery = async(jid: string, type: 'get' | 'set', content: BinaryNode[]) => (
-        query({
-            tag: 'iq',
-            attrs: {
+	const newsletterQuery = async(jid: string, type: 'get' | 'set', content: BinaryNode[]) => (
+		query({
+			tag: 'iq',
+			attrs: {
                 id: generateMessageTag(),
-                type,
-                xmlns: 'newsletter',
-                to: jid,
-            },
-            content
-        })
-    )
+				type,
+				xmlns: 'newsletter',
+				to: jid,
+			},
+			content
+		})
+	)
 
     const newsletterWMexQuery = async(jid: string | undefined, query_id: QueryIds, content?: object) => (
         query({
-            tag: 'iq',
-            attrs: {
+			tag: 'iq',
+			attrs: {
                 id: generateMessageTag(),
-                type: 'get',
-                xmlns: 'w:mex',
-                to: S_WHATSAPP_NET,
-            },
-            content: [
+				type: 'get',
+				xmlns: 'w:mex',
+				to: S_WHATSAPP_NET,
+			},
+			content: [
                 {
                     tag: 'query',
                     attrs: {query_id},
                     content: encoder.encode(JSON.stringify({ variables: { newsletter_id: jid, ...content } }))
                 }
             ]
-        })
+		})
     )
 
     const parseFetchedUpdates = async(node: BinaryNode, type: 'messages' | 'updates') => {
@@ -79,12 +79,7 @@ export const makeNewsletterSocket = (config: SocketConfig) => {
                     authState.creds.me!.id,
                     authState.creds.me!.lid || '',
                     signalRepository,
-                    config.logger,
-                    {
-                        shouldIncludeReactions: true,
-                        shouldIncludeHistory: false,
-                        shouldIncludePayload: true
-                    }
+                    config.logger
                 )
     
                 await decrypt()
@@ -106,6 +101,7 @@ export const makeNewsletterSocket = (config: SocketConfig) => {
 
                 return data
             }
+
         }))
     }
 
@@ -186,15 +182,15 @@ export const makeNewsletterSocket = (config: SocketConfig) => {
                 ]
             })
             const result = await newsletterWMexQuery(undefined, QueryIds.CREATE, {
-                input: {
-                    name,
-                    description: description ?? null,
-                    picture: picture ? (await generateProfilePicture(picture)).img.toString('base64') : null,
-                    settings: {
+                input: { 
+			name,
+			description: description ?? null,
+			picture: picture ? (await generateProfilePicture(picture)).img.toString('base64') : null,
+			settings: {
                         reaction_codes: { value: 'ALL' }
-                    }
-                }
-            })
+			}
+		    }
+               })
 
             return extractNewsletterMetadata(result, true)
         },
@@ -222,12 +218,14 @@ export const makeNewsletterSocket = (config: SocketConfig) => {
             return JSON.parse(buff!).data[XWAPaths.ADMIN_COUNT].admin_count as number
         },
 
+        /**user is Lid, not Jid */
         newsletterChangeOwner: async(jid: string, user: string) => {
             await newsletterWMexQuery(jid, QueryIds.CHANGE_OWNER, {
                 user_id: user
             })
         },
 
+        /**user is Lid, not Jid */
         newsletterDemote: async(jid: string, user: string) => {
             await newsletterWMexQuery(jid, QueryIds.DEMOTE, {
                 user_id: user
@@ -238,6 +236,7 @@ export const makeNewsletterSocket = (config: SocketConfig) => {
             await newsletterWMexQuery(jid, QueryIds.DELETE)
         },
 
+        /**if code wasn't passed, the reaction will be removed (if is reacted) */
         newsletterReactMessage: async(jid: string, server_id: string, code?: string) => {
             await query({
                 tag: 'message',
