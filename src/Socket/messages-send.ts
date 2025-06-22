@@ -1,4 +1,4 @@
-import { promises as fs } from 'fs';
+import { createReadStream } from 'fs';
 import { Boom } from '@hapi/boom'
 import NodeCache from '@cacheable/node-cache'
 import { Readable } from 'stream'
