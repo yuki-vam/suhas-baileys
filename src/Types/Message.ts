@@ -364,6 +364,31 @@ export type MessageGenerationOptionsFromContent = MiscMessageGenerationOptions &
 	userJid: string
 }
 
+export type PrepareStreamResult = {
+  type: 'prepare';
+  mediaKey: undefined;
+  encWriteStream: Buffer;
+  fileLength: number;
+  fileSha256: Buffer;
+  fileEncSha256: undefined;
+  bodyPath: string | undefined;
+  didSaveToTmpPath: boolean;
+};
+
+export type EncryptedStreamResult = {
+  type: 'encrypted';
+  mediaKey: Buffer;
+  originalFilePath: string | undefined;
+  encFilePath: string;
+  mac: Buffer;
+  fileEncSha256: Buffer;
+  fileSha256: Buffer;
+  fileLength: number;
+  didSaveToTmpPath: boolean;
+};
+
+export type StreamResult = PrepareStreamResult | EncryptedStreamResult;
+	
 export type WAMediaUploadFunctionOpts = { fileEncSha256B64: string, mediaType: MediaType, newsletter?: boolean, timeoutMs?: number }
 
 export type WAMediaUploadFunction = (encFilePath: string | Buffer, opts: WAMediaUploadFunctionOpts) => Promise<{ mediaUrl: string, directPath: string, handle?: string }>
