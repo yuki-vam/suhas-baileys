@@ -23,6 +23,7 @@ import {
 	WAMessageStatus,
 	WAProto,
 	WATextMessage,
+	StreamResult,
 } from '../Types'
 import { isJidGroup, isJidNewsletter, isJidStatusBroadcast, jidNormalizedUser } from '../WABinary'
 import { sha256 } from './crypto'
