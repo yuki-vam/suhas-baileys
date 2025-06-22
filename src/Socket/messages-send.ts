@@ -876,7 +876,11 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 						getProfilePicUrl: sock.profilePictureUrl,
 					//need update 👉
                                                 
-                                               upload: waUploadToServer,
+                                               upload: async(readStream: Readable, opts: WAMediaUploadFunctionOpts) => {
+							const up = await waUploadToServer(readStream, { ...opts, newsletter: isJidNewsletter(jid) })
+							mediaHandle = up.handle
+							return up
+						},
 						mediaCache: config.mediaCache,
 						options: config.options,
 						messageId: generateMessageIDV2(sock.user?.id),
