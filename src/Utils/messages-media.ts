@@ -695,9 +695,9 @@ export const getWAUploadToServer = (
 			const url = `https://${hostname}${media}/${fileEncSha256B64}?auth=${auth}&token=${fileEncSha256B64}`
 			let result: any
 			try {
-				if(maxContentLengthBytes && reqBody.length > maxContentLengthBytes) {
-					throw new Boom(`Body too large for "${hostname}"`, { statusCode: 413 })
-				}
+				//if(maxContentLengthBytes && reqBody.length > maxContentLengthBytes) {
+				//	throw new Boom(`Body too large for "${hostname}"`, { statusCode: 413 })
+				//}
 
 				const body = await axios.post(
 					url,
