@@ -450,8 +450,8 @@ const onChunk = (buff: Buffer) => {
 		const fileSha256 = sha256Plain.digest()
 		const fileEncSha256 = sha256Enc.digest()
 
-		encWriteStream.push(mac)
-		encWriteStream.push(null)
+		//encWriteStream.push(mac)
+		//encWriteStream.push(null)
 
 		encFileWriteStream.write(mac)
 
