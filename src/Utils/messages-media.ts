@@ -18,6 +18,7 @@ import { BinaryNode, getBinaryNodeChild, getBinaryNodeChildBuffer, jidNormalized
 import { aesDecryptGCM, aesEncryptGCM, hkdf } from './crypto'
 import { generateMessageIDV2 } from './generics'
 import { ILogger } from './logger'
+import { PrepareStreamResult, EncryptedStreamResult } from '../Types/message';
 
 const getTmpFilesDirectory = () => tmpdir()
 
@@ -326,7 +327,8 @@ export const prepareStream = async (
   media: WAMediaUpload,
   mediaType: MediaType,
   { logger, saveOriginalFileIfRequired, opts }: EncryptedStreamOptions = {}
-) => {
+): Promise<PrepareStreamResult> => {
+  
   const { stream, type } = await getStream(media, opts);
   logger?.debug('fetched media stream');
   let bodyPath: string | undefined;
@@ -371,7 +373,9 @@ export const encryptedStream = async (
   media: WAMediaUpload,
   mediaType: MediaType,
   { logger, saveOriginalFileIfRequired, opts }: EncryptedStreamOptions = {}
-) => {
+): Promise<EncryptedStreamResult> => {
+
+
   const { stream, type } = await getStream(media, opts);
 
   logger?.debug('fetched media stream');
