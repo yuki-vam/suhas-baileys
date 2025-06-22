@@ -13,12 +13,11 @@ import { URL } from 'url'
 import { proto } from '../../WAProto'
 import { DEFAULT_ORIGIN, MEDIA_HKDF_KEY_MAPPING, MEDIA_PATH_MAP } from '../Defaults'
 //import { BaileysEventMap, DownloadableMessage, MediaConnInfo, MediaDecryptionKeyInfo, MediaType, MessageType, SocketConfig, WAGenericMediaMessage, WAMediaPayloadURL, WAMediaUpload, WAMediaUploadFunction, WAMessageContent } from '../Types'
-import { BaileysEventMap, DownloadableMessage, MediaConnInfo, MediaDecryptionKeyInfo, MediaType, MessageType, SocketConfig, WAGenericMediaMessage, WAMediaUpload, WAMediaUploadFunction, WAMessageContent } from '../Types'
+import { PrepareStreamResult, EncryptedStreamResult, BaileysEventMap, DownloadableMessage, MediaConnInfo, MediaDecryptionKeyInfo, MediaType, MessageType, SocketConfig, WAGenericMediaMessage, WAMediaUpload, WAMediaUploadFunction, WAMessageContent } from '../Types'
 import { BinaryNode, getBinaryNodeChild, getBinaryNodeChildBuffer, jidNormalizedUser } from '../WABinary'
 import { aesDecryptGCM, aesEncryptGCM, hkdf } from './crypto'
 import { generateMessageIDV2 } from './generics'
 import { ILogger } from './logger'
-import { PrepareStreamResult, EncryptedStreamResult } from '../Types/message';
 
 const getTmpFilesDirectory = () => tmpdir()
 
