@@ -391,7 +391,7 @@ export type StreamResult = PrepareStreamResult | EncryptedStreamResult;
 	
 export type WAMediaUploadFunctionOpts = { fileEncSha256B64: string, mediaType: MediaType, newsletter?: boolean, timeoutMs?: number }
 
-export type WAMediaUploadFunction = (encFilePath: string | Buffer, opts: WAMediaUploadFunctionOpts) => Promise<{ mediaUrl: string, directPath: string, handle?: string }>
+export type WAMediaUploadFunction = (encFilePath: string, opts: WAMediaUploadFunctionOpts) => Promise<{ mediaUrl: string, directPath: string, handle?: string }>
 
 export type MediaGenerationOptions = {
 	logger?: ILogger
