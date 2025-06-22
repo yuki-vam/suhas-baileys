@@ -1,7 +1,7 @@
 import { Boom } from '@hapi/boom'
 import axios from 'axios'
 import { randomBytes } from 'crypto'
-import { promises as fs } from 'fs'
+import { createReadStream, promises as fs } from 'fs'
 import { type Transform } from 'stream'
 import { proto } from '../../WAProto'
 import { ILogger } from './logger'
@@ -178,7 +178,7 @@ const fileEncSha256B64 = (options.newsletter ? fileSha256 : fileEncSha256 ?? fil
 	const [{ mediaUrl, directPath, handle }] = await Promise.all([
 		(async() => {
 			const result = await options.upload(
-				encFilePath,
+				createReadStream(encFilePath),
 				{ fileEncSha256B64, mediaType, timeoutMs: options.mediaUploadTimeoutMs }
 			)
 			logger?.debug({ mediaType, cacheableKey }, 'uploaded media')
