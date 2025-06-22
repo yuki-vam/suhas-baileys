@@ -346,6 +346,7 @@ export const prepareStream = async (
     (stream as Readable)?.destroy(); // Fix for line 642
     logger?.debug('prepare stream data successfully');
     return {
+      type: 'prepare',
       mediaKey: undefined,
       encWriteStream: buffer,
       fileLength,
@@ -438,6 +439,7 @@ export const encryptedStream = async (
     logger?.debug('encrypted data successfully');
 
     return {
+      type: 'encrypted',
       mediaKey,
       originalFilePath,
       encFilePath,
