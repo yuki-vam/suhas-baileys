@@ -629,12 +629,12 @@ export const getWAUploadToServer = (
 		let urls: { mediaUrl: string, directPath: string, handle?: string } | undefined
 		const hosts = [ ...customUploadHosts, ...uploadInfo.hosts ]
 
-		const chunks: Buffer[] | Buffer = []
+		/*const chunks: Buffer[] | Buffer = []
 		if (!Buffer.isBuffer(stream)) {
 			for await (const chunk of stream) {
 				chunks.push(chunk)
 			}
-		}
+		}*/
 
 		//const reqBody = Buffer.isBuffer(stream) ? stream : Buffer.concat(chunks)
 		fileEncSha256B64 = encodeBase64EncodedStringForUpload(fileEncSha256B64)
