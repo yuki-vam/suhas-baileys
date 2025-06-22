@@ -874,17 +874,14 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 							},
 						),
 						getProfilePicUrl: sock.profilePictureUrl,
-						upload: async (encFilePath: string | Buffer, opts: WAMediaUploadFunctionOpts) => {
-  let buffer: Buffer;
-  if (typeof encFilePath === 'string') {
-    buffer = await fs.readFile(encFilePath); // Read file into Buffer
-  } else {
-    buffer = encFilePath; // Use Buffer directly
-  }
-  const up = await waUploadToServer(buffer, { ...opts, newsletter: isJidNewsletter(jid) });
-  mediaHandle = up.handle;
-  return up;
-},
+					//need update 👉
+                                                
+                                               upload: async (encFilePath: string, opts: WAMediaUploadFunctionOpts) => {
+                                      const stream = createReadStream(encFilePath)
+                       const up = await waUploadToServer(stream, { ...opts, newsletter: isJidNewsletter(jid) })
+             mediaHandle = up.handle
+        return up
+     },
 						mediaCache: config.mediaCache,
 						options: config.options,
 						messageId: generateMessageIDV2(sock.user?.id),
