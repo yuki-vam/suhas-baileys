@@ -177,8 +177,7 @@ export const prepareWAMessageMedia = async (
 const fileEncSha256B64 = (options.newsletter ? fileSha256 : fileEncSha256 ?? fileSha256).toString('base64')
 	const [{ mediaUrl, directPath, handle }] = await Promise.all([
 		(async() => {
-			const result = await options.upload(
-				createReadStream(encFilePath),
+			const result = await options.upload( encFilePath,
 				{ fileEncSha256B64, mediaType, timeoutMs: options.mediaUploadTimeoutMs }
 			)
 			logger?.debug({ mediaType, cacheableKey }, 'uploaded media')
